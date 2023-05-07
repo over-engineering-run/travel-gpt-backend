@@ -7,10 +7,20 @@ name = "pypi"
 openai = "*"
 boto3 = "*"
 google-search-results = "*"
+flask = "*"
+flask-cors = "*"
+waitress = "*"
+flask-limiter = "*"
+wrapt-timeout-decorator = "*"
+flask-sqlalchemy = "*"
+flask-migrate = "*"
+psycopg2 = "*"
 
 [dev-packages]
 ipython = "*"
 jupyterlab = "*"
+flake8 = "*"
+pylint = "*"
 
 [requires]
 python_version = "3.11"
