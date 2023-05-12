@@ -1,0 +1,6 @@
+# ignore everything
+**
+
+!src/**/*.py
+
+!Pipfile*
