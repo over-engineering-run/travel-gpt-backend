@@ -15,8 +15,7 @@ RUN apt-get update && \
 
 # init flask api
 WORKDIR $BACKEND_ROOT
-ADD "./src" $BACKEND_ROOT
-COPY Pipfile Pipfile.lock $BACKEND_ROOT
+ADD . $BACKEND_ROOT
 
 
 # install requirements
@@ -28,6 +27,4 @@ RUN python -m pipenv install
 # expose port for flask
 expose 5000
 
-
-# ENTRYPOINT ["python", "$BACKEND_ROOT/servers/server_runner.py"]
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["python", "-m", "pipenv", "run", "python", "$BACKEND_ROOT/src/servers/server_runner.py"]
