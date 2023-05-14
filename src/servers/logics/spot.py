@@ -11,7 +11,7 @@ sys.path.insert(0, root_dir)
 from servers.models import spot as spot_models
 
 
-_GLEN_TIMEOUT = 15.0
+_GLEN_TIMEOUT = 30.0
 _GMAP_TIMEOUT = 3.0
 
 _SPOT_SOURCE_WHITELIST_SET = {
