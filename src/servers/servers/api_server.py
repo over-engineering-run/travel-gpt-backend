@@ -485,7 +485,7 @@ class APIServer:
 
         """
         search spot by picture
-        curl -XGET 'http://0.0.0.0:5000/v1/spots/search?pic_id=c4c89753-90b4-4366-b297-8dc2fde25fc7'
+        curl -XGET 'http://0.0.0.0:5000/v1/spots/search?pic_id=b7cc7df2-e1a5-4ee4-b93a-b6143ea3570a'
         """
 
         # parse and check request
