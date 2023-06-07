@@ -17,7 +17,6 @@ CREATE TABLE IF NOT EXISTS "mood_pictures" (
     size varchar(16),
     url text,
     mood_message_id uuid,
-    cached boolean DEFAULT false
     CONSTRAINT "mood_message_fkey" FOREIGN KEY ("mood_message_id") REFERENCES "mood_messages" ("id") ON DELETE CASCADE
 );
 
