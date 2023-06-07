@@ -23,6 +23,7 @@ class MoodMessage(db.Model):
     content = db.Column(db.String)
     prompt = db.Column(db.String)
     model = db.Column(db.String)
+    cached = db.Column(db.Boolean, default=False)
 
     def __init__(
             self,
@@ -30,11 +31,13 @@ class MoodMessage(db.Model):
             content: str = None,
             prompt: str = None,
             model: str = None,
+            cached: bool = False
     ):
         self.id      = uuid_str or str(uuid.uuid4())
         self.content = content
         self.prompt  = prompt
         self.model   = model
+        self.cached  = cached
 
 
 class MoodPicture(db.Model):

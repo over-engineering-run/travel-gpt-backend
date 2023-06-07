@@ -181,7 +181,7 @@ class APIServer:
 
         """
         generate random mood description
-        curl -XPOST 'http://0.0.0.0:5000/v1/mood' -H 'Content-Type: application/json' -d '{"message":"quite happy and relaxing"}'
+        curl -XPOST 'http://0.0.0.0:5000/v1/mood' -H 'Content-Type: application/json' -d '{"message":"quite happy and relaxing", "cache": true}'
         """
 
         # parse request
@@ -202,6 +202,8 @@ class APIServer:
                 headers={"Content-Type": "application/json"}
             )
 
+        req_cache_bool = req_data.get('cache', False)
+
         # create new mood message instance
         mood_msg = mood_models.MoodMessage(content=req_msg)
 
@@ -212,7 +214,8 @@ class APIServer:
                 uuid_str=mood_msg.uuid,
                 content=mood_msg.content,
                 prompt=mood_msg.prompt,
-                model=self.app_params['mood_message_model']
+                model=self.app_params['mood_message_model'],
+                cached=req_cache_bool
             )
             self.db.session.add(db_mood_message)
             self.db.session.commit()
