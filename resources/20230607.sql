@@ -1,13 +1,14 @@
--- DROP TABLE IF EXISTS "mood_messages";
+-- DROP TABLE IF EXISTS "mood_messages" CASCADE;
 CREATE TABLE IF NOT EXISTS "mood_messages" (
     id uuid PRIMARY KEY,
     created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     content text,
     model varchar(16),
-    prompt text
+    prompt text,
+    cached boolean DEFAULT false
 );
 
--- DROP TABLE IF EXISTS "mood_pictures";
+-- DROP TABLE IF EXISTS "mood_pictures" CASCADE;
 CREATE TABLE IF NOT EXISTS "mood_pictures" (
     id uuid PRIMARY KEY,
     created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -16,10 +17,11 @@ CREATE TABLE IF NOT EXISTS "mood_pictures" (
     size varchar(16),
     url text,
     mood_message_id uuid,
+    cached boolean DEFAULT false
     CONSTRAINT "mood_message_fkey" FOREIGN KEY ("mood_message_id") REFERENCES "mood_messages" ("id") ON DELETE CASCADE
 );
 
--- DROP TABLE IF EXISTS "pictures";
+-- DROP TABLE IF EXISTS "pictures" CASCADE;
 CREATE TABLE IF NOT EXISTS "pictures" (
     id uuid PRIMARY KEY,
     created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -30,7 +32,7 @@ CREATE TABLE IF NOT EXISTS "pictures" (
     reference_id uuid
 );
 
--- DROP TABLE IF EXISTS "spot_images";
+-- DROP TABLE IF EXISTS "spot_images" CASCADE;
 CREATE TABLE IF NOT EXISTS "spot_images" (
     id uuid PRIMARY KEY,
     created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -41,7 +43,7 @@ CREATE TABLE IF NOT EXISTS "spot_images" (
     meta_data jsonb
 );
 
--- DROP TABLE IF EXISTS "spots";
+-- DROP TABLE IF EXISTS "spots" CASCADE;
 CREATE TABLE IF NOT EXISTS "spots" (
     id uuid PRIMARY KEY,
     created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
