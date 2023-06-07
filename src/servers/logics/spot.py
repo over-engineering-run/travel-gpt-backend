@@ -11,7 +11,7 @@ sys.path.insert(0, root_dir)
 from servers.models import spot as spot_models
 
 
-_SERPAPI_TIMEOUT = 15.0
+_GLEN_TIMEOUT = 30.0
 _GMAP_TIMEOUT = 3.0
 
 _SPOT_SOURCE_WHITELIST_SET = {
@@ -30,7 +30,7 @@ _SPOT_SOURCE_BLACKLIST_SET = {
 }
 
 
-def _serpapi_match_to_spot_image(serpapi_match: str) -> spot_models.SpotImage:
+def _glen_match_to_spot_image(serpapi_match: str) -> spot_models.SpotImage:
 
     spot = spot_models.SpotImage(
         title=serpapi_match['title'],
@@ -46,33 +46,46 @@ def _serpapi_match_to_spot_image(serpapi_match: str) -> spot_models.SpotImage:
     return spot
 
 
-@timeout(_SERPAPI_TIMEOUT)
 def search_spot_image_by_pic_url(api_key: str, pic_url: str) -> list[spot_models.SpotImage]:
 
-    # serpapi request
-    params = {
-        "engine":   "google_lens",
-        "url":      pic_url,
-        "api_key":  api_key,
-        "hl":       "en",
-        "output":   "JSON",
-        "no_cache": "true"
+    # # serpapi request
+    # params = {
+    #     "engine":   "google_lens",
+    #     "url":      pic_url,
+    #     "api_key":  api_key,
+    #     "hl":       "en",
+    #     "output":   "JSON",
+    #     "no_cache": "true"
+    # }
+
+    # serpapi_search = GoogleSearch(params)
+    # serpapi_search_results = serpapi_search.get_dict()
+    # glen_visual_matches = serpapi_search_results["visual_matches"]
+
+    # by kayac crawler
+    glen_req_url = "https://visual-search-api-service.fly.dev/search/google-lens"
+    glen_req_params = {
+        "url": pic_url,
     }
 
-    serpapi_search = GoogleSearch(params)
-    serpapi_search_results = serpapi_search.get_dict()
-    serpapi_search_visual_matches = serpapi_search_results["visual_matches"]
+    # matches
+    resp = requests.get(
+        glen_req_url,
+        params=glen_req_params,
+        timeout=_GLEN_TIMEOUT
+    )
+    glen_visual_matches = resp.json().get('visual_matches')
 
     # filter match
     filtered_matches = []
-    for match in serpapi_search_visual_matches:
-        if match['source'] in _SPOT_SOURCE_WHITELIST_SET:
-            filtered_matches.append(match)
+    for v_match in glen_visual_matches:
+        if v_match['source'] in _SPOT_SOURCE_WHITELIST_SET:
+            filtered_matches.append(v_match)
 
     # result
     spot_img_list = []
-    for match in filtered_matches:
-        spot_img_list.append(_serpapi_match_to_spot_image(match))
+    for v_match in filtered_matches:
+        spot_img_list.append(_glen_match_to_spot_image(v_match))
 
     return spot_img_list
 
