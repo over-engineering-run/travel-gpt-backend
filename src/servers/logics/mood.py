@@ -19,6 +19,7 @@ _MSG_TIMEOUT = 10.0
 
 _MSG_PROMPT = """
 Help me to generate a short random English sentence to discribe my mood, feeling and scenery.
+Keep it short and only use English words.
 """.strip()
 
 _IMG_RETRY = 1
@@ -35,12 +36,14 @@ def _openai_random_mood_message_create(
         prompt: str,
         n: int
 ):
-    return openai.Completion.create(
+
+    return openai.ChatCompletion.create(
         model=model,
-        prompt=prompt,
-        temperature=2,
+        messages=[
+            {"role": "user", "content": prompt}
+        ],
         max_tokens=50,
-        n=n
+        temperature=2
     )
 
 
@@ -56,7 +59,7 @@ def generate_random_mood_message(
         n=1,
     )
 
-    return openai_response.choices[0]['text'].strip()
+    return openai_response.choices[0]['message']['content'].strip()
 
 
 @timeout(_IMG_TIMEOUT)
@@ -79,11 +82,6 @@ def generate_mood_image_by_description(
     logging.info("generating image from mood: %s", mood_msg.content)
 
     prompt = f"{_IMG_PROMPT} {mood_msg.content}"
-    # openai_response = _openai_image_create(
-    #     prompt=prompt,
-    #     size=image_size,
-    #     n=1
-    # )
     openai_response = misc_utils.retry(
         retry_n=_IMG_RETRY,
         _func=_openai_image_create,
