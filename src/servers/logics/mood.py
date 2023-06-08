@@ -15,7 +15,7 @@ from servers.models import mood as mood_models
 
 
 _MSG_RETRY = 1
-_MSG_TIMEOUT = 3.0
+_MSG_TIMEOUT = 10.0
 
 _MSG_PROMPT = """
 Help me to generate a short random English sentence to discribe my mood, feeling and scenery.
