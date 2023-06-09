@@ -65,7 +65,7 @@ def search_spot_image_by_pic_url(api_key: str, pic_url: str) -> list[spot_models
     # by kayac crawler
     glen_req_url = "https://visual-search-api-service.fly.dev/search/google-lens"
     glen_req_params = {
-        "url": pic_url,
+        "url": pic_url
     }
 
     # matches
