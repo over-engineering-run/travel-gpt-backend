@@ -23,7 +23,7 @@ Keep it short and only use English words.
 """.strip()
 
 _IMG_RETRY = 1
-_IMG_TIMEOUT = 10.0
+_IMG_TIMEOUT = 30.0
 
 _IMG_PROMPT = """
 some tourist spot that reflect my mood which is
