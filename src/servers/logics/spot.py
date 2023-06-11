@@ -82,6 +82,9 @@ def search_spot_image_by_pic_url(api_key: str, pic_url: str) -> list[spot_models
         if v_match['source'] in _SPOT_SOURCE_WHITELIST_SET:
             filtered_matches.append(v_match)
 
+    if len(filtered_matches) == 0:
+        filtered_matches = glen_visual_matches
+
     # result
     spot_img_list = []
     for v_match in filtered_matches:
