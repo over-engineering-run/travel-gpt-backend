@@ -180,22 +180,28 @@ class APIServer:
 
         """
         generate random mood description
-        curl -XGET 'http://0.0.0.0:5000/v1/mood'
+        curl -XGET 'http://0.0.0.0:5000/v1/mood?cached=false'
         """
+
+        self.logger.info(f"handling request for /v1/mood")
 
         # openai generate random mood description
         try:
 
+            req_cache_bool_str = request.args.get('cached', default="true", type=str)
+            req_cache_bool = req_cache_bool_str.lower() != 'false'
+
             random_mood_str = ""
 
             # try to get from cached
-            cached_mood_message_id_list = self.app_resources['cached_mood_message_id_list']
-            cached_msg_n = len(cached_mood_message_id_list)
-            if cached_msg_n > 0:
-                cached_i = random.randint(0, cached_msg_n-1)
-                cached_msg_id = cached_mood_message_id_list[cached_i]
-                db_mood_msg = DBMoodMessage.query.get(cached_msg_id)
-                random_mood_str = db_mood_msg.content
+            if req_cache_bool:
+                cached_mood_message_id_list = self.app_resources['cached_mood_message_id_list']
+                cached_msg_n = len(cached_mood_message_id_list)
+                if cached_msg_n > 0:
+                    cached_i = random.randint(0, cached_msg_n-1)
+                    cached_msg_id = cached_mood_message_id_list[cached_i]
+                    db_mood_msg = DBMoodMessage.query.get(cached_msg_id)
+                    random_mood_str = db_mood_msg.content
 
             # generate by openai
             if (random_mood_str is None) or (len(random_mood_str.strip()) == 0):
@@ -222,6 +228,8 @@ class APIServer:
                 status=status_code,
                 headers={"Content-Type": "application/json"}
             )
+
+        self.logger.info("done request for /v1/mood")
 
         # response
         resp = {
@@ -314,7 +322,7 @@ class APIServer:
 
         """
         generate picture from mood description
-        curl -XPOST 'http://0.0.0.0:5000/v1/mood/d7dd5a2d-5767-403f-805e-738d07a1f569/picture'
+        curl -XPOST 'http://0.0.0.0:5000/v1/mood/94a1a2d7-0303-47f8-9b1f-2c852413e1e1/picture'
         """
 
         # parse args
@@ -425,7 +433,7 @@ class APIServer:
 
         """
         save picture to s3
-        curl -XPOST 'http://0.0.0.0:5000/v1/pictures' -H 'Content-Type: application/json' -d '{"type":"mood_pic", "id": "d7dd5a2d-5767-403f-805e-738d07a1f569"}'
+        curl -XPOST 'http://0.0.0.0:5000/v1/pictures' -H 'Content-Type: application/json' -d '{"type":"mood_pic", "id": "94a1a2d7-0303-47f8-9b1f-2c852413e1e1"}'
         """
 
         # parse request
@@ -548,7 +556,7 @@ class APIServer:
 
         """
         search spot by picture
-        curl -XGET 'http://0.0.0.0:5000/v1/spots/search?pic_id=b7cc7df2-e1a5-4ee4-b93a-b6143ea3570a'
+        curl -XGET 'http://0.0.0.0:5000/v1/spots/search?pic_id=11ae17cf-b6a7-479a-943b-ec2e7e227d50'
         """
 
         # parse and check request
