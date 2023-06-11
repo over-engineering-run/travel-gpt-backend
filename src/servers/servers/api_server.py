@@ -3,6 +3,8 @@ import sys
 import json
 import logging
 
+import random
+
 from flask.logging import create_logger
 from flask import request, Response, abort
 
@@ -50,6 +52,7 @@ class APIServer:
 
         self.app = app
         self.app_params = params
+        self.app_resources = self.build_server_resources()
         self.db = db
         self.logger = create_logger(self.app)
 
@@ -117,6 +120,22 @@ class APIServer:
             req_methods=["GET"]
         )
 
+    def build_server_resources(self):
+
+        # mood message
+        with self.app.app_context():
+            cached_msg_list = DBMoodMessage.query.filter_by(cached=True).all()
+
+        cached_msg_id_list = []
+        for msg in cached_msg_list:
+            if (msg.content is None) or (len(msg.content.strip()) == 0):
+                continue
+            cached_msg_id_list.append(str(msg.id))
+
+        return {
+            'cached_mood_message_id_list': cached_msg_id_list
+        }
+
     def run(self):
 
         """start running APIServer"""
@@ -166,9 +185,24 @@ class APIServer:
 
         # openai generate random mood description
         try:
-            random_mood_str = mood_logics.generate_random_mood_message(
-                model=self.app_params['mood_message_model'],
-            )
+
+            random_mood_str = ""
+
+            # try to get from cached
+            cached_mood_message_id_list = self.app_resources['cached_mood_message_id_list']
+            cached_msg_n = len(cached_mood_message_id_list)
+            if cached_msg_n > 0:
+                cached_i = random.randint(0, cached_msg_n-1)
+                cached_msg_id = cached_mood_message_id_list[cached_i]
+                db_mood_msg = DBMoodMessage.query.get(cached_msg_id)
+                random_mood_str = db_mood_msg.content
+
+            # generate by openai
+            if (random_mood_str is None) or (len(random_mood_str.strip()) == 0):
+                random_mood_str = mood_logics.generate_random_mood_message(
+                    model=self.app_params['mood_message_model'],
+                )
+
         except Exception as e:
             err_msg = f"endpoint: /v1/mood, error: {repr(e)}"
             self.logger.error(err_msg)
