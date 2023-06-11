@@ -75,6 +75,13 @@ class APIServer:
         self.logger.info("initializing api endpoints...")
 
         self.add_endpoint(
+            endpoint="/healthz",
+            endpoint_name="healthz",
+            handler=self.healthz,
+            handler_params={},
+            req_methods=["GET"]
+        )
+        self.add_endpoint(
             endpoint="/v1/mood",
             endpoint_name="get-rand-mood-msg",
             handler=self.random_mood_message,
@@ -129,6 +136,25 @@ class APIServer:
             endpoint_name,
             EndpointAction(handler, handler_params),
             methods=req_methods
+        )
+
+    def healthz(self, params: dict, *args: list, **kwargs: dict):
+
+        """
+        healthz: for endpoint heath checking
+        curl -XGET 'http://0.0.0.0:5000/healthz'
+        """
+
+        return Response(
+            response=json.dumps(
+                {
+                    "message":       "/healthz running",
+                    "error_type":    None,
+                    "error_message": None
+                }
+            ),
+            status=200,
+            headers={"Content-Type": "application/json"}
         )
 
     def random_mood_message(self, params: dict, *args: list, **kwargs: dict):
