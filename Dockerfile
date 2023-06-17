@@ -13,7 +13,7 @@ RUN apt-get update && \
     apt-get install --no-install-recommends -y libpq-dev gcc python-dev
 
 
-# init flask api
+# init backend api
 WORKDIR $BACKEND_ROOT
 ADD . $BACKEND_ROOT
 
@@ -24,7 +24,7 @@ RUN python -m pip install pipenv
 RUN python -m pipenv install
 
 
-# expose port for flask
+# expose port for backend app
 expose 5000
 
 ENTRYPOINT ["python", "-m", "pipenv", "run", "python", "$BACKEND_ROOT/src/servers/server_runner.py"]

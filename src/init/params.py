@@ -5,11 +5,9 @@ def load_environment_variables():
 
     """load all environment variables"""
 
-    # flask
-    app_name  = os.getenv("FLASK_APP", "server")
-    app_host  = os.getenv("FLASK_HOST", "0.0.0.0")
-    app_port  = os.getenv("FLASK_PORT", "5000")
-    app_debug = os.getenv("FLASK_DEBUG", "").lower() == "true"
+    # app
+    app_host  = os.getenv("APP_HOST", "0.0.0.0")
+    app_port  = os.getenv("APP_PORT", "5000")
 
     # aws
     aws_access_id     = os.getenv("AWS_ACCESS_KEY_ID")
@@ -36,7 +34,6 @@ def load_environment_variables():
     serpapi_api_key = os.getenv("SERPAPI_API_KEY")
 
     envs = {
-        'app_debug':          app_debug,
         'app_host':           app_host,
         'app_name':           app_name,
         'app_port':           app_port,
