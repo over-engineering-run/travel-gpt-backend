@@ -1,3 +1,29 @@
+-- DROP TABLE IF EXISTS "users" CASCADE;
+CREATE TABLE IF NOT EXISTS "users" (
+    id uuid PRIMARY KEY,
+    name varchar(256),
+    email text unique,
+    created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- DROP TABLE IF EXISTS "user_sessions" CASCADE;
+CREATE TABLE IF NOT EXISTS "user_sessions" (
+    id uuid PRIMARY KEY,
+    user_id uuid,
+    mood_message_id uuid,
+    mood_picture_id uuid,
+    s3_picture_id uuid,
+    spot_id uuid,
+    created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "user_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE,
+    CONSTRAINT "mood_message_fkey" FOREIGN KEY ("mood_message_id") REFERENCES "mood_messages" ("id") ON DELETE CASCADE,
+    CONSTRAINT "mood_picture_fkey" FOREIGN KEY ("mood_picture_id") REFERENCES "mood_pictures" ("id") ON DELETE CASCADE,
+    CONSTRAINT "s3_picture_fkey" FOREIGN KEY ("s3_picture_id") REFERENCES "pictures" ("id") ON DELETE CASCADE,
+    CONSTRAINT "spot_fkey" FOREIGN KEY ("spot_id") REFERENCES "spots" ("id") ON DELETE CASCADE
+);
+
 -- DROP TABLE IF EXISTS "mood_messages" CASCADE;
 CREATE TABLE IF NOT EXISTS "mood_messages" (
     id uuid PRIMARY KEY,
