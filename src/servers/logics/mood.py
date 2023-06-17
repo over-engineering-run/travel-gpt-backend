@@ -14,12 +14,11 @@ from utils import misc as misc_utils
 from servers.models import mood as mood_models
 
 
-_MSG_RETRY = 1
+_MSG_RETRY = 2
 _MSG_TIMEOUT = 10.0
 
 _MSG_PROMPT = """
-Help me to generate a short random English sentence to discribe my mood, feeling and scenery.
-Keep it short and only use English words.
+Help me tp generate a random easy-to-understand sentence to describe my mood.
 """.strip()
 
 _IMG_RETRY = 1
@@ -37,7 +36,7 @@ def _openai_random_mood_message_create(
         n: int
 ):
 
-    return openai.ChatCompletion.create(
+    openai_response = openai.ChatCompletion.create(
         model=model,
         messages=[
             {"role": "user", "content": prompt}
@@ -46,12 +45,22 @@ def _openai_random_mood_message_create(
         temperature=2
     )
 
+    msg_str = openai_response.choices[0]['message']['content'].strip()
+
+    if ('AI' in msg_str) or ('computer' in msg_str):
+        logging.warning(msg_str)
+        raise Exception('model not generating mood message')
+
+    msg_str = msg_str.strip('\"').strip('\'')
+
+    return msg_str
+
 
 def generate_random_mood_message(
         model: str
 ) -> mood_models.MoodMessage:
 
-    openai_response = misc_utils.retry(
+    mood_message = misc_utils.retry(
         retry_n=_MSG_RETRY,
         _func=_openai_random_mood_message_create,
         model=model,
@@ -59,7 +68,7 @@ def generate_random_mood_message(
         n=1,
     )
 
-    return openai_response.choices[0]['message']['content'].strip()
+    return mood_message
 
 
 @timeout(_IMG_TIMEOUT)
