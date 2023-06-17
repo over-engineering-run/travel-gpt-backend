@@ -14,15 +14,15 @@ from utils import misc as misc_utils
 from servers.models import mood as mood_models
 
 
-_MSG_RETRY = 1
-_MSG_TIMEOUT = 3.0
+_MSG_RETRY = 2
+_MSG_TIMEOUT = 10.0
 
 _MSG_PROMPT = """
-Help me to generate a short random English sentence to discribe my mood, feeling and scenery.
+Help me tp generate a random easy-to-understand sentence to describe my mood.
 """.strip()
 
 _IMG_RETRY = 1
-_IMG_TIMEOUT = 10.0
+_IMG_TIMEOUT = 30.0
 
 _IMG_PROMPT = """
 some tourist spot that reflect my mood which is
@@ -35,20 +35,32 @@ def _openai_random_mood_message_create(
         prompt: str,
         n: int
 ):
-    return openai.Completion.create(
+
+    openai_response = openai.ChatCompletion.create(
         model=model,
-        prompt=prompt,
-        temperature=2,
+        messages=[
+            {"role": "user", "content": prompt}
+        ],
         max_tokens=50,
-        n=n
+        temperature=2
     )
+
+    msg_str = openai_response.choices[0]['message']['content'].strip()
+
+    if ('AI' in msg_str) or ('computer' in msg_str):
+        logging.warning(msg_str)
+        raise Exception('model not generating mood message')
+
+    msg_str = msg_str.strip('\"').strip('\'')
+
+    return msg_str
 
 
 def generate_random_mood_message(
         model: str
 ) -> mood_models.MoodMessage:
 
-    openai_response = misc_utils.retry(
+    mood_message = misc_utils.retry(
         retry_n=_MSG_RETRY,
         _func=_openai_random_mood_message_create,
         model=model,
@@ -56,7 +68,7 @@ def generate_random_mood_message(
         n=1,
     )
 
-    return openai_response.choices[0]['text'].strip()
+    return mood_message
 
 
 @timeout(_IMG_TIMEOUT)
@@ -79,11 +91,6 @@ def generate_mood_image_by_description(
     logging.info("generating image from mood: %s", mood_msg.content)
 
     prompt = f"{_IMG_PROMPT} {mood_msg.content}"
-    # openai_response = _openai_image_create(
-    #     prompt=prompt,
-    #     size=image_size,
-    #     n=1
-    # )
     openai_response = misc_utils.retry(
         retry_n=_IMG_RETRY,
         _func=_openai_image_create,

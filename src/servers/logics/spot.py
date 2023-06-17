@@ -11,8 +11,8 @@ sys.path.insert(0, root_dir)
 from servers.models import spot as spot_models
 
 
-_GLEN_TIMEOUT = 30.0
-_GMAP_TIMEOUT = 3.0
+_GLEN_TIMEOUT = 60.0
+_GMAP_TIMEOUT = 10.0
 
 _SPOT_SOURCE_WHITELIST_SET = {
     'agoda.com',
@@ -65,7 +65,7 @@ def search_spot_image_by_pic_url(api_key: str, pic_url: str) -> list[spot_models
     # by kayac crawler
     glen_req_url = "https://visual-search-api-service.fly.dev/search/google-lens"
     glen_req_params = {
-        "url": pic_url,
+        "url": pic_url
     }
 
     # matches
@@ -81,6 +81,9 @@ def search_spot_image_by_pic_url(api_key: str, pic_url: str) -> list[spot_models
     for v_match in glen_visual_matches:
         if v_match['source'] in _SPOT_SOURCE_WHITELIST_SET:
             filtered_matches.append(v_match)
+
+    if len(filtered_matches) == 0:
+        filtered_matches = glen_visual_matches
 
     # result
     spot_img_list = []

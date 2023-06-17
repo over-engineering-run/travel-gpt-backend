@@ -3,6 +3,8 @@ import sys
 import json
 import logging
 
+import random
+
 from flask.logging import create_logger
 from flask import request, Response, abort
 
@@ -50,6 +52,7 @@ class APIServer:
 
         self.app = app
         self.app_params = params
+        self.app_resources = self.build_server_resources()
         self.db = db
         self.logger = create_logger(self.app)
 
@@ -74,6 +77,13 @@ class APIServer:
         # init api endpoints
         self.logger.info("initializing api endpoints...")
 
+        self.add_endpoint(
+            endpoint="/healthz",
+            endpoint_name="healthz",
+            handler=self.healthz,
+            handler_params={},
+            req_methods=["GET"]
+        )
         self.add_endpoint(
             endpoint="/v1/mood",
             endpoint_name="get-rand-mood-msg",
@@ -110,6 +120,22 @@ class APIServer:
             req_methods=["GET"]
         )
 
+    def build_server_resources(self):
+
+        # mood message
+        with self.app.app_context():
+            cached_msg_list = DBMoodMessage.query.filter_by(cached=True).all()
+
+        cached_msg_id_list = []
+        for msg in cached_msg_list:
+            if (msg.content is None) or (len(msg.content.strip()) == 0):
+                continue
+            cached_msg_id_list.append(str(msg.id))
+
+        return {
+            'cached_mood_message_id_list': cached_msg_id_list
+        }
+
     def run(self):
 
         """start running APIServer"""
@@ -131,18 +157,58 @@ class APIServer:
             methods=req_methods
         )
 
+    def healthz(self, params: dict, *args: list, **kwargs: dict):
+
+        """
+        healthz: for endpoint heath checking
+        curl -XGET 'http://0.0.0.0:5000/healthz'
+        """
+
+        return Response(
+            response=json.dumps(
+                {
+                    "message":       "/healthz running",
+                    "error_type":    None,
+                    "error_message": None
+                }
+            ),
+            status=200,
+            headers={"Content-Type": "application/json"}
+        )
+
     def random_mood_message(self, params: dict, *args: list, **kwargs: dict):
 
         """
         generate random mood description
-        curl -XGET 'http://0.0.0.0:5000/v1/mood'
+        curl -XGET 'http://0.0.0.0:5000/v1/mood?cached=false'
         """
+
+        self.logger.info(f"handling request for /v1/mood")
 
         # openai generate random mood description
         try:
-            random_mood_str = mood_logics.generate_random_mood_message(
-                model=self.app_params['mood_message_model'],
-            )
+
+            req_cache_bool_str = request.args.get('cached', default="true", type=str)
+            req_cache_bool = req_cache_bool_str.lower() != 'false'
+
+            random_mood_str = ""
+
+            # try to get from cached
+            if req_cache_bool:
+                cached_mood_message_id_list = self.app_resources['cached_mood_message_id_list']
+                cached_msg_n = len(cached_mood_message_id_list)
+                if cached_msg_n > 0:
+                    cached_i = random.randint(0, cached_msg_n-1)
+                    cached_msg_id = cached_mood_message_id_list[cached_i]
+                    db_mood_msg = DBMoodMessage.query.get(cached_msg_id)
+                    random_mood_str = db_mood_msg.content
+
+            # generate by openai
+            if (random_mood_str is None) or (len(random_mood_str.strip()) == 0):
+                random_mood_str = mood_logics.generate_random_mood_message(
+                    model=self.app_params['mood_message_model'],
+                )
+
         except Exception as e:
             err_msg = f"endpoint: /v1/mood, error: {repr(e)}"
             self.logger.error(err_msg)
@@ -163,6 +229,8 @@ class APIServer:
                 headers={"Content-Type": "application/json"}
             )
 
+        self.logger.info("done request for /v1/mood")
+
         # response
         resp = {
             "message": random_mood_str,
@@ -181,7 +249,7 @@ class APIServer:
 
         """
         generate random mood description
-        curl -XPOST 'http://0.0.0.0:5000/v1/mood' -H 'Content-Type: application/json' -d '{"message":"quite happy and relaxing"}'
+        curl -XPOST 'http://0.0.0.0:5000/v1/mood' -H 'Content-Type: application/json' -d '{"message":"quite happy and relaxing", "cache": true}'
         """
 
         # parse request
@@ -202,6 +270,8 @@ class APIServer:
                 headers={"Content-Type": "application/json"}
             )
 
+        req_cache_bool = req_data.get('cache', False)
+
         # create new mood message instance
         mood_msg = mood_models.MoodMessage(content=req_msg)
 
@@ -212,7 +282,8 @@ class APIServer:
                 uuid_str=mood_msg.uuid,
                 content=mood_msg.content,
                 prompt=mood_msg.prompt,
-                model=self.app_params['mood_message_model']
+                model=self.app_params['mood_message_model'],
+                cached=req_cache_bool
             )
             self.db.session.add(db_mood_message)
             self.db.session.commit()
@@ -251,7 +322,7 @@ class APIServer:
 
         """
         generate picture from mood description
-        curl -XPOST 'http://0.0.0.0:5000/v1/mood/d7dd5a2d-5767-403f-805e-738d07a1f569/picture'
+        curl -XPOST 'http://0.0.0.0:5000/v1/mood/94a1a2d7-0303-47f8-9b1f-2c852413e1e1/picture'
         """
 
         # parse args
@@ -362,7 +433,7 @@ class APIServer:
 
         """
         save picture to s3
-        curl -XPOST 'http://0.0.0.0:5000/v1/pictures' -H 'Content-Type: application/json' -d '{"type":"mood_pic", "id": "d7dd5a2d-5767-403f-805e-738d07a1f569"}'
+        curl -XPOST 'http://0.0.0.0:5000/v1/pictures' -H 'Content-Type: application/json' -d '{"type":"mood_pic", "id": "94a1a2d7-0303-47f8-9b1f-2c852413e1e1"}'
         """
 
         # parse request
@@ -485,7 +556,7 @@ class APIServer:
 
         """
         search spot by picture
-        curl -XGET 'http://0.0.0.0:5000/v1/spots/search?pic_id=b7cc7df2-e1a5-4ee4-b93a-b6143ea3570a'
+        curl -XGET 'http://0.0.0.0:5000/v1/spots/search?pic_id=11ae17cf-b6a7-479a-943b-ec2e7e227d50'
         """
 
         # parse and check request
