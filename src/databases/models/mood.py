@@ -4,6 +4,7 @@ import sys
 import datetime
 import uuid
 
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import func
@@ -18,12 +19,12 @@ class MoodMessage(Base):
 
     __tablename__ = 'mood_messages'
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    content = db.Column(db.String)
-    prompt = db.Column(db.String)
-    model = db.Column(db.String)
-    cached = db.Column(db.Boolean, default=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    content = Column(String)
+    prompt = Column(String)
+    model = Column(String)
+    cached = Column(Boolean, default=False)
 
     def __init__(
             self,
@@ -44,14 +45,14 @@ class MoodPicture(Base):
 
     __tablename__ = 'mood_pictures'
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    url = db.Column(db.String)
-    size = db.Column(db.String)
-    prompt = db.Column(db.String)
-    model = db.Column(db.String)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    url = Column(String)
+    size = Column(String)
+    prompt = Column(String)
+    model = Column(String)
 
-    mood_message_id = db.Column(UUID(as_uuid=True), db.ForeignKey("mood_messages.id"))
+    mood_message_id = Column(UUID(as_uuid=True), ForeignKey("mood_messages.id"))
 
     def __init__(
             self,

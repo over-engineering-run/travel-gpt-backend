@@ -4,6 +4,7 @@ import sys
 import datetime
 import uuid
 
+from sqlalchemy import Column, String, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import func
@@ -18,13 +19,13 @@ class Picture(Base):
 
     __tablename__ = 'pictures'
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    filename = db.Column(db.String)
-    size = db.Column(db.String)
-    url = db.Column(db.String)
-    reference_type = db.Column(db.String)
-    reference_id = db.Column(UUID(as_uuid=True))
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    filename = Column(String)
+    size = Column(String)
+    url = Column(String)
+    reference_type = Column(String)
+    reference_id = Column(UUID(as_uuid=True))
 
     def __init__(
             self,
