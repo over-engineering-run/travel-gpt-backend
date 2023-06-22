@@ -8,13 +8,13 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import func
 
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.insert(0, root_dir)
+_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, _root_dir)
 
-from databases.databases import db
+from databases.database import Base
 
 
-class MoodMessage(db.Model):
+class MoodMessage(Base):
 
     __tablename__ = 'mood_messages'
 
@@ -40,7 +40,7 @@ class MoodMessage(db.Model):
         self.cached  = cached
 
 
-class MoodPicture(db.Model):
+class MoodPicture(Base):
 
     __tablename__ = 'mood_pictures'
 

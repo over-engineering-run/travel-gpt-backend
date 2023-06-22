@@ -4,11 +4,14 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-pipenv = "*"
+fastapi = "*"
 boto3 = "*"
 google-search-results = "*"
 openai = "*"
 psycopg2 = "*"
+sentry-sdk = {extras = ["fastapi"], version = "*"}
+sqlalchemy = "*"
+uvicorn = {extras = ["standard"], version = "*"}
 wrapt-timeout-decorator = "*"
 
 [dev-packages]

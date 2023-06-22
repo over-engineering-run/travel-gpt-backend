@@ -30,12 +30,14 @@ def load_environment_variables():
     mood_message_model = os.getenv("MOOD_MESSAGE_MODEL")
     mood_image_size    = os.getenv("MOOD_IMAGE_SIZE")
 
+    # sentry
+    sentry_dsn = os.getenv("SENTRY_DSN")
+
     # serpapi
     serpapi_api_key = os.getenv("SERPAPI_API_KEY")
 
     envs = {
         'app_host':           app_host,
-        'app_name':           app_name,
         'app_port':           app_port,
         'aws_access_id':      aws_access_id,
         'aws_access_key':     aws_access_key,
@@ -48,6 +50,7 @@ def load_environment_variables():
         'openai_api_org':     openai_api_org,
         'mood_message_model': mood_message_model,
         'mood_image_size':    mood_image_size,
+        'sentry_dsn':         sentry_dsn,
         'serpapi_api_key':    serpapi_api_key,
     }
 
