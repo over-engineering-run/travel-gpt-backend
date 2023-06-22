@@ -4,8 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-fastapi = "*"
 boto3 = "*"
+fastapi = "*"
 google-search-results = "*"
 openai = "*"
 psycopg2 = "*"
