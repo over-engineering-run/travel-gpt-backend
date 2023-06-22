@@ -27,6 +27,7 @@ from servers.models.error import ErrorInfo
 
 from databases import database as db_main
 from databases.models.mood import MoodMessage as DBMoodMessage
+from databases.models.picture import Picture as DBPicture
 
 
 app = FastAPI()
@@ -93,12 +94,22 @@ async def get_mood_message(
 
     app_logger.info("endpoint: /v1/mood/<mood_message_id>, info: get request for mood message %s", mood_message_id)
 
+    err_status_code = 500
+    err_type = "FailedToProcessRequest"
     try:
 
+        # check mood_message_id
+        if (mood_message_id is None) or (len(mood_message_id.strip()) == 0):
+            err_status_code = 400
+            err_type = "FailedToParseRequest"
+            raise Exception("missing mood_message_id")
+
         # get mood message from db
-        db_mood_message = db.query(DBMoodMessage).filter(DBMoodMessage.id == mood_message_id).first()
+        db_mood_message = db.query(DBMoodMessage).get(mood_message_id)
         if (db_mood_message is None) or (len(db_mood_message.content) == 0):
-            raise Exception(f"request mood message {mood_message_id} not found in database")
+            err_status_code = 400
+            err_type = "InvalidRequest"
+            raise Exception(f"mood message {mood_message_id} not found in database")
 
     except Exception as e:
         req_msg = {'mood_message_id': mood_message_id}
@@ -106,11 +117,11 @@ async def get_mood_message(
         app_logger.error(err_msg)
 
         err_info = ErrorInfo(
-            err_type="FailedToProcessRequest",
+            err_type=err_type,
             err_msg=err_msg
         )
         return JSONResponse(
-            status_code=400,
+            status_code=err_status_code,
             content=jsonable_encoder(err_info)
         )
 
