@@ -8,14 +8,13 @@ from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
 from sqlalchemy.orm import relationship
 from sqlalchemy import func
 
+_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, _root_dir)
 
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.insert(0, root_dir)
-
-from databases.databases import db
+from databases.database import Base
 
 
-class SpotImage(db.Model):
+class SpotImage(Base):
 
     __tablename__ = 'spot_images'
 
@@ -47,7 +46,7 @@ class SpotImage(db.Model):
         self.meta_data    = meta_data
 
 
-class Spot(db.Model):
+class Spot(Base):
 
     __tablename__ = 'spots'
 

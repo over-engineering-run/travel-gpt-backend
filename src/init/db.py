@@ -1,14 +1,11 @@
-def init_db(db, db_migrate, flask_app, params):
+import os
+import sys
 
-    # config
-    flask_app.config['SQLALCHEMY_DATABASE_URI'] = params['db_dsn']
+_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _root_dir)
 
-    # init db and migrate
-    db.init_app(flask_app)
-    db_migrate.init_app(flask_app, db)
+from databases.database import Base, engine
 
-    # create
-    with flask_app.app_context():
-        db.create_all()
 
-    return db, db_migrate
+def init_db():
+    Base.metadata.create_all(bind=engine)

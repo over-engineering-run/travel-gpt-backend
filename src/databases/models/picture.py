@@ -8,13 +8,13 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import func
 
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.insert(0, root_dir)
+_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, _root_dir)
 
-from databases.databases import db
+from databases.database import Base
 
 
-class Picture(db.Model):
+class Picture(Base):
 
     __tablename__ = 'pictures'
 
