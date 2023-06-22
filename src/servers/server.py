@@ -139,6 +139,65 @@ async def get_mood_message(
     return resp
 
 
+@app.get("/v1/pictures/{s3_pic_id}")
+async def get_picture(
+        s3_pic_id: str,
+        db: Session = Depends(db_main.get_db_session)
+):
+
+    """
+    get_picture: endpoint to get s3 picture info from by id
+    curl -XGET 'http://0.0.0.0:5000/v1/pictures/3496ba34-4022-4109-9e3c-6aae37d658a1'
+    """
+
+    app_logger.info("endpoint: /v1/pictures/<s3_pic_id>, info: get request for s3 picture %s", s3_pic_id)
+
+    err_status_code = 500
+    err_type = "FailedToProcessRequest"
+    try:
+
+        # check s3_pic_id
+        if (s3_pic_id is None) or (len(s3_pic_id.strip()) == 0):
+            err_status_code = 400
+            err_type = "FailedToParseRequest"
+            raise Exception("missing s3_pic_id")
+
+        # get mood message from db
+        db_picture = db.query(DBPicture).get(s3_pic_id)
+        if (db_picture is None) or (len(db_picture.url) == 0):
+            err_status_code = 400
+            err_type = "InvalidRequest"
+            raise Exception(f"mood message {s3_pic_id} not found in database")
+
+    except Exception as e:
+        req_msg = {'s3_pic_id': s3_pic_id}
+        err_msg = f"endpoint: /v1/pictures/<s3_pic_id>, error: {repr(e)}, request: {json.dumps(req_msg)}"
+        app_logger.error(err_msg)
+
+        err_info = ErrorInfo(
+            err_type=err_type,
+            err_msg=err_msg
+        )
+        return JSONResponse(
+            status_code=err_status_code,
+            content=jsonable_encoder(err_info)
+        )
+
+    raw_resp = {
+        "s3_pic_id":   db_picture.id,
+        "s3_pic_url":  db_picture.url,
+        "s3_pic_size": db_picture.size
+    }
+    resp = JSONResponse(
+        status_code=200,
+        content=jsonable_encoder(raw_resp)
+    )
+
+    app_logger.info("endpoint: /v1/pictures/<s3_pic_id>, info: done request for s3 picture %s", s3_pic_id)
+
+    return resp
+
+
 if __name__ == '__main__':
 
     uvicorn.run(
