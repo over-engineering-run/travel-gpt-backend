@@ -118,15 +118,15 @@ def _build_server_resources() -> dict:
 #     }
 
 
-def init_server(app_name: str) -> tuple[dict, dict, logging.Logger]:
+def init_server() -> tuple[dict, dict, logging.Logger]:
 
     # init app params and resources
     app_params    = _init_server_params()
     app_resources = _build_server_resources()
 
     # init logger
-    app_logger = logging.getLogger(app_name)
-    app_logger.setLevel(logging.INFO)
+    logging.basicConfig(encoding='utf-8', level=logging.INFO)
+    app_logger = logging.getLogger("uvicorn.info")
 
     # init sentry
     init_sentry.init_sentry(dsn=app_params['sentry_dsn'])
