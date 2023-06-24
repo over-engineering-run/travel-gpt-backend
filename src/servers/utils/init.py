@@ -13,7 +13,8 @@ from utils import json as js_utils
 from init import params as params_init
 from init import sentry as init_sentry
 
-# from databases.models.mood import MoodMessage as DBMoodMessage
+from databases import database as db_main
+from databases.models.mood import MoodMessage as DBMoodMessage
 
 
 def _parse_server_arguments() -> dict:
@@ -102,20 +103,26 @@ def _build_server_resources() -> dict:
     return {}
 
 
-# def _build_server_resources() -> dict:
+def _build_server_resources() -> dict:
 
-#     # mood message
-#     cached_msg_list = DBMoodMessage.query.filter_by(cached=True).all()
+    # start db session
+    db = db_main.SessionLocal()
 
-#     cached_msg_id_list = []
-#     for msg in cached_msg_list:
-#         if (msg.content is None) or (len(msg.content.strip()) == 0):
-#             continue
-#         cached_msg_id_list.append(str(msg.id))
+    # mood message
+    cached_msg_list = db.query(DBMoodMessage).filter_by(cached=True).all()
 
-#     return {
-#         'cached_mood_message_id_list': cached_msg_id_list
-#     }
+    cached_msg_id_list = []
+    for msg in cached_msg_list:
+        if (msg.content is None) or (len(msg.content.strip()) == 0):
+            continue
+        cached_msg_id_list.append(str(msg.id))
+
+    # close db session
+    db.close()
+
+    return {
+        'cached_mood_message_id_list': list(set(cached_msg_id_list))
+    }
 
 
 def init_server() -> tuple[dict, dict, logging.Logger]:

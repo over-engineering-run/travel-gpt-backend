@@ -18,7 +18,7 @@ _MSG_RETRY = 2
 _MSG_TIMEOUT = 10.0
 
 _MSG_PROMPT = """
-Help me tp generate a random easy-to-understand sentence to describe my mood.
+Help me tp generate a random easy-to-understand short sentence to describe my mood.
 """.strip()
 
 _IMG_RETRY = 1
