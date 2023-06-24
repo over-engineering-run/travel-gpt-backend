@@ -23,7 +23,8 @@ def db_mood_message_to_server_mood_message(db_mood_message: DBMoodMessage) -> Sv
         created_at=db_mood_message.created_at,
         content=db_mood_message.content,
         prompt=db_mood_message.prompt,
-        model=db_mood_message.model
+        model=db_mood_message.model,
+        cached=db_mood_message.cached
     )
     return svr_mood_message
 
