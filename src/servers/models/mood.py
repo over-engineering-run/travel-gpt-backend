@@ -11,6 +11,7 @@ class MoodMessage:
             content: str = None,
             prompt: str = None,
             model: str = None,
+            cached: bool = False,
     ):
 
         self.uuid       = uuid_str or str(uuid.uuid4())
@@ -18,6 +19,7 @@ class MoodMessage:
         self.content    = content
         self.prompt     = prompt
         self.model      = model
+        self.cached     = cached
 
 
 class MoodPicture:

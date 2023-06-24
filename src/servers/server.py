@@ -27,6 +27,7 @@ sys.path.insert(0, _root_dir)
 from utils import json as js_utils
 
 from servers.models.error import ErrorInfo
+from servers.models import mood as mood_models
 
 from servers.utils import init as server_init
 from servers.utils import model as model_utils
@@ -51,7 +52,7 @@ app_params, app_resources, app_logger = server_init.init_server()
 async def healthz():
 
     """
-    healthz: for endpoint heath checking
+    healthz: for heath checking
     curl -XGET 'http://0.0.0.0:5000/healthz'
     """
 
@@ -69,7 +70,7 @@ async def healthz():
 async def trigger_error():
 
     """
-    trigger_error: endpoint to trigger error for testing
+    trigger_error: trigger error for testing
     curl -XGET 'http://0.0.0.0:5000/error'
     """
 
@@ -101,11 +102,14 @@ async def get_mood_message(
 ):
 
     """
-    get_mood_message: endpoint to get mood message content by id
+    get_mood_message: get mood message content by id
     curl -XGET 'http://0.0.0.0:5000/v1/mood/94a1a2d7-0303-47f8-9b1f-2c852413e1e1'
     """
 
-    app_logger.info("endpoint: /v1/mood/<mood_message_id>, info: get request for mood message %s", mood_message_id)
+    app_logger.info(
+        "endpoint: /v1/mood/<mood_message_id>, info: get request for mood message %s",
+        mood_message_id
+    )
 
     err_status_code = 500
     err_type = "FailedToProcessRequest"
@@ -118,7 +122,7 @@ async def get_mood_message(
             raise Exception("missing mood_message_id")
 
         # get mood message from db
-        db_mood_message = db.query(DBMoodMessage).get(mood_message_id)
+        db_mood_message = db.get(DBMoodMessage, mood_message_id)
         if (db_mood_message is None) or (len(db_mood_message.content) == 0):
             err_status_code = 404
             err_type = "InvalidRequest"
@@ -147,7 +151,10 @@ async def get_mood_message(
         content=jsonable_encoder(raw_resp)
     )
 
-    app_logger.info("endpoint: /v1/mood/<mood_message_id>, info: done request for mood message %s", mood_message_id)
+    app_logger.info(
+        "endpoint: /v1/mood/<mood_message_id>, info: done request for mood message %s",
+        mood_message_id
+    )
 
     return resp
 
@@ -159,11 +166,13 @@ async def generate_mood_message(
 ):
 
     """
-    generate_mood_message: endpoint to generate random mood message
+    generate_mood_message: generate random mood message
     curl -XPOST 'http://0.0.0.0:5000/v1/mood/generate' -H 'Content-Type: application/json' -d '{"from_cache": "false"}'
     """
 
-    app_logger.info("endpoint: /v1/mood/generate, info: get request for generating random mood message")
+    app_logger.info(
+        "endpoint: /v1/mood/generate, info: get request for generating random mood message"
+    )
 
     err_status_code = 500
     err_type = "FailedToProcessRequest"
@@ -191,12 +200,13 @@ async def generate_mood_message(
                 cached_i = random.randint(0, cached_msg_n-1)
                 cached_msg_id = cached_mood_message_id_list[cached_i]
 
-                db_mood_msg = db.query(DBMoodMessage).get(cached_msg_id)
+                db_mood_msg = db.get(DBMoodMessage, cached_msg_id)
                 if (db_mood_msg is None) or (len(db_mood_msg.content) == 0):
                     app_logger.error(f"cached mood message {cached_msg_id} not found in database")
                 else:
                     random_mood_id  = db_mood_msg.id
                     random_mood_str = db_mood_msg.content
+                    app_logger.info(f"return random cached mood message {cached_msg_id} from database")
 
         # generate by openai
         if (random_mood_str is None) or (len(random_mood_str.strip()) == 0):
@@ -227,7 +237,115 @@ async def generate_mood_message(
         content=jsonable_encoder(raw_resp)
     )
 
-    app_logger.info("endpoint: /v1/mood/generate, info: done request for generating random mood message %s", random_mood_id)
+    app_logger.info(
+        "endpoint: /v1/mood/generate, info: done request for generating random mood message %s",
+        random_mood_id
+    )
+
+    return resp
+
+
+@app.post("/v1/mood")
+async def post_mood_message(
+        req_body: dict,
+        db: Session = Depends(db_main.get_db_session)
+):
+
+    """
+    post_mood_message: save mood message to db
+    curl -XPOST 'http://0.0.0.0:5000/v1/mood' -H 'Content-Type: application/json' -d '{"to_cache": "true", "message": "I am happy", "mood_message_id": null}'
+    """
+
+    app_logger.info("endpoint: /v1/mood, info: get request for saving mood message to db")
+
+    err_status_code = 500
+    err_type = "FailedToProcessRequest"
+    try:
+
+        # check request body
+        if (req_body is None) or (len(req_body) == 0):
+            err_status_code = 400
+            err_type = "InvalidRequest"
+            raise Exception("request body is empty")
+
+        # parse mood message content
+        req_mood_msg_content = req_body.get('message')
+        if (req_mood_msg_content is None) or (len(req_mood_msg_content.strip()) == 0):
+            err_status_code = 400
+            err_type = "InvalidRequest"
+            raise Exception("request body missing mood message")
+
+        # check if there is mood message id for later cached checking
+        req_mood_msg_id = req_body.get('mood_message_id')
+        if (req_mood_msg_id is not None) and (len(req_mood_msg_id) > 0):
+
+            # check for cache
+            db_mood_msg = db.get(DBMoodMessage, req_mood_msg_id)
+
+            if (db_mood_msg is not None) \
+               and (db_mood_msg.cached is True) \
+               and (db_mood_msg.content.strip() == req_mood_msg_content.strip()):
+
+                raw_resp = {
+                    "mood_message_id": db_mood_msg.id
+                }
+                resp = JSONResponse(
+                    status_code=200,
+                    content=jsonable_encoder(raw_resp)
+                )
+
+                app_logger.info(
+                    "endpoint: /v1/mood, info: found cached mood message %s in db",
+                    db_mood_msg.id
+                )
+
+                return resp
+
+        # if not cached create a new mood message
+        req_cache_bool_str = req_body.get('to_cache', 'false')
+        req_cache_bool = req_cache_bool_str.lower() == 'true'
+
+        mood_msg = mood_models.MoodMessage(
+            content=req_mood_msg_content,
+            cached=req_cache_bool
+        )
+
+        # save to db
+        db_mood_msg = DBMoodMessage(
+                uuid_str=mood_msg.uuid,
+                content=mood_msg.content,
+                prompt=mood_msg.prompt,
+                model=app_params['mood_message_model'],
+                cached=mood_msg.cached
+            )
+        db.add(db_mood_msg)
+        db.commit()
+
+    except Exception as e:
+        err_msg = f"endpoint: /v1/mood, error: {repr(e)}"
+        app_logger.error(err_msg)
+
+        err_info = ErrorInfo(
+            err_type=err_type,
+            err_msg=err_msg
+        )
+        return JSONResponse(
+            status_code=err_status_code,
+            content=jsonable_encoder(err_info)
+        )
+
+    raw_resp = {
+        "mood_message_id": db_mood_msg.id
+    }
+    resp = JSONResponse(
+        status_code=200,
+        content=jsonable_encoder(raw_resp)
+    )
+
+    app_logger.info(
+        "endpoint: /v1/mood, info: done request for saving mood message %s to db",
+        db_mood_msg.id
+    )
 
     return resp
 
@@ -239,7 +357,7 @@ async def get_picture(
 ):
 
     """
-    get_picture: endpoint to get s3 picture info from by id
+    get_picture: get s3 picture info from by id
     curl -XGET 'http://0.0.0.0:5000/v1/pictures/3496ba34-4022-4109-9e3c-6aae37d658a1'
     """
 
@@ -256,7 +374,7 @@ async def get_picture(
             raise Exception("missing s3_pic_id")
 
         # get mood message from db
-        db_picture = db.query(DBPicture).get(s3_pic_id)
+        db_picture = db.get(DBPicture, s3_pic_id)
         if (db_picture is None) or (len(db_picture.url) == 0):
             err_status_code = 404
             err_type = "InvalidRequest"
@@ -298,7 +416,7 @@ async def post_picture(
 ):
 
     """
-    post_picture: endpoint to save picture to s3
+    post_picture: save picture to s3
     curl -XPOST 'http://0.0.0.0:5000/v1/pictures' -H 'Content-Type: application/json' -d '{"type": "mood_pic", "id": "0d2622f2-f484-487a-a647-6b5ef2da1252"}'
     """
 
@@ -337,10 +455,14 @@ async def post_picture(
                        .order_by(desc(DBPicture.created_at)) \
                        .first()
 
-            if db_pic is None:
+            if db_pic is not None:
+
+                app_logger.info("mood picture %s found already on s3", pic_ref_id)
+
+            else:
 
                 # get mood picture from db
-                db_mood_pic = db.query(DBMoodPicture).get(pic_ref_id)
+                db_mood_pic = db.get(DBMoodPicture, pic_ref_id)
                 if (db_mood_pic is None) or (len(db_mood_pic.url) == 0):
                     err_status_code = 404
                     err_type = "InvalidRequest"
