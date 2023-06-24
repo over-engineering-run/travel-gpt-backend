@@ -77,13 +77,21 @@ def search_spot_image_by_pic_url(api_key: str, pic_url: str) -> list[spot_models
     glen_visual_matches = resp.json().get('visual_matches')
 
     # filter match
-    filtered_matches = []
+    prioritized_matches = []
+    other_matches = []
     for v_match in glen_visual_matches:
         if v_match['source'] in _SPOT_SOURCE_WHITELIST_SET:
-            filtered_matches.append(v_match)
+            prioritized_matches.append(v_match)
+        else:
+            other_matches.append(v_match)
 
-    if len(filtered_matches) == 0:
-        filtered_matches = glen_visual_matches
+    filtered_matches = prioritized_matches + other_matches
+    filtered_matches = filtered_matches[:10]
+
+    # if len(prioritized_matches) > 0:
+    #     filtered_matches = prioritized_matches
+    # else:
+    #     filtered_matches = other_matches[:10]
 
     # result
     spot_img_list = []

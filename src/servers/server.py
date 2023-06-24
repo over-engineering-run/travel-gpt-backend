@@ -206,7 +206,7 @@ async def generate_mood_message(
                 else:
                     random_mood_id  = db_mood_msg.id
                     random_mood_str = db_mood_msg.content
-                    app_logger.info(f"return random cached mood message {cached_msg_id} from database")
+                    app_logger.info(f"return cached mood message {cached_msg_id} from database")
 
         # generate by openai
         if (random_mood_str is None) or (len(random_mood_str.strip()) == 0):
@@ -312,12 +312,12 @@ async def post_mood_message(
 
         # save to db
         db_mood_msg = DBMoodMessage(
-                uuid_str=mood_msg.uuid,
-                content=mood_msg.content,
-                prompt=mood_msg.prompt,
-                model=app_params['mood_message_model'],
-                cached=mood_msg.cached
-            )
+            uuid_str=mood_msg.uuid,
+            content=mood_msg.content,
+            prompt=mood_msg.prompt,
+            model=app_params['mood_message_model'],
+            cached=mood_msg.cached
+        )
         db.add(db_mood_msg)
         db.commit()
 
@@ -512,7 +512,7 @@ async def get_picture(
         if (db_picture is None) or (len(db_picture.url) == 0):
             err_status_code = 404
             err_type = "InvalidRequest"
-            raise Exception(f"mood message {s3_pic_id} not found in database")
+            raise Exception(f"s3 picture {s3_pic_id} not found in database")
 
     except Exception as e:
         req_msg = {'s3_pic_id': s3_pic_id}
@@ -538,7 +538,10 @@ async def get_picture(
         content=jsonable_encoder(raw_resp)
     )
 
-    app_logger.info("endpoint: /v1/pictures/<s3_pic_id>, info: done request for s3 picture %s", s3_pic_id)
+    app_logger.info(
+        "endpoint: /v1/pictures/<s3_pic_id>, info: done request for s3 picture %s",
+        s3_pic_id
+    )
 
     return resp
 
@@ -578,7 +581,11 @@ async def post_picture(
             err_type = "InvalidRequest"
             raise Exception("request body missing id")
 
-        app_logger.info("endpoint: /v1/pictures, info: get request for saving %s id %s to s3", pic_ref_type, pic_ref_id)
+        app_logger.info(
+            "endpoint: /v1/pictures, info: get request for saving %s id %s to s3",
+            pic_ref_type,
+            pic_ref_id
+        )
 
         # get mood picture by mood id from db
         if pic_ref_type == 'mood_pic':
@@ -649,7 +656,210 @@ async def post_picture(
         content=jsonable_encoder(raw_resp)
     )
 
-    app_logger.info("endpoint: /v1/pictures, info: done request for saving %s id %s to s3", pic_ref_type, pic_ref_id)
+    app_logger.info(
+        "endpoint: /v1/pictures, info: done request for saving %s id %s to s3",
+        pic_ref_type,
+        pic_ref_id
+    )
+
+    return resp
+
+
+@app.get("/v1/spots/search")
+async def get_spot_search_by_picture(
+        s3_pic_id: str,
+        db: Session = Depends(db_main.get_db_session)
+):
+
+    """
+    post_mood_message_to_mood_picture: get mood picture from mood message
+    curl -XGET 'http://0.0.0.0:5000//v1/spots/search?s3_pic_id=7ddfad56-24b8-4929-9af5-68a681593f41'
+    """
+
+    app_logger.info(
+        "endpoint: /v1/spots/search, info: get request for searching spot with picture %s",
+        s3_pic_id
+    )
+
+    err_status_code = 500
+    err_type = "FailedToProcessRequest"
+    try:
+
+        # check s3_pic_id
+        if (s3_pic_id is None) or (len(s3_pic_id) == 0):
+            err_status_code = 400
+            err_type = "InvalidRequest"
+            raise Exception("failed to parse s3_pic_id")
+
+        # get s3 picture from db
+        db_picture = db.get(DBPicture, s3_pic_id)
+        if (db_picture is None) or (len(db_picture.url) == 0):
+            err_status_code = 404
+            err_type = "InvalidRequest"
+            raise Exception(f"s3 picture {s3_pic_id} not found in database")
+
+        # try to get from cache
+        db_spot_img_list = db.query(DBSpotImage) \
+                             .filter(DBSpotImage.reference_id == db_picture.id) \
+                             .order_by(desc(DBSpotImage.created_at)) \
+                             .all()
+
+        if (db_spot_img_list is not None) and (len(db_spot_img_list) > 0):
+
+            for db_spot_img in db_spot_img_list:
+
+                db_spot = db.query(DBSpot) \
+                            .filter(DBSpot.spot_image_id == db_spot_img.id) \
+                            .order_by(desc(DBSpot.created_at)) \
+                            .first()
+
+                if db_spot is not None:
+
+                    raw_resp = {
+                        "uuid":       db_spot.id,
+                        "created_at": db_spot.created_at,
+                        "address":    db_spot.address,
+                        "name":       db_spot.name,
+                        "rating":     db_spot.rating,
+                        "rating_n":   db_spot.rating_n,
+                        "place_id":   db_spot.place_id,
+                        "reference":  db_spot.reference,
+                        "types":      db_spot.types,
+                        "geometry":   db_spot.geometry,
+                        "image": {
+                            "id":  db_spot_img.id,
+                            "url": db_spot_img.thumbnail
+                        }
+                    }
+
+                    resp = JSONResponse(
+                        status_code=200,
+                        content=jsonable_encoder(raw_resp)
+                    )
+
+                    app_logger.info(
+                        "endpoint: /v1/spots/search, info: found cached spot %s for picture %s",
+                        db_spot.id,
+                        s3_pic_id
+                    )
+
+                    return resp
+
+        # search: s3 picture (mood image) -> spot image
+        spot_img_list = spot_logics.search_spot_image_by_pic_url(
+            api_key=app_params['serpapi_api_key'],
+            pic_url=db_picture.url
+        )
+        app_logger.info("found %d spot image for s3 picture %s", len(spot_img_list), s3_pic_id)
+
+        # spot image -> spot
+        spot_result = None
+        for spot_img in spot_img_list:
+
+            if spot_img is None:
+                continue
+
+            spot_list = spot_logics.search_spot_by_spot_image(
+                api_key=app_params['google_api_key'],
+                image=spot_img,
+            )
+
+            if len(spot_list) > 0:
+                spot_result = spot_list[0]
+                spot_result.image = spot_img
+                break
+
+        # update spot image and spot to db
+        if spot_result is None:
+
+            raw_resp = {
+                "uuid":       None,
+                "created_at": None,
+                "address":    None,
+                "name":       None,
+                "rating":     None,
+                "rating_n":   None,
+                "place_id":   None,
+                "reference":  None,
+                "types":      None,
+                "geometry":   None,
+                "image": {
+                    "id":  None,
+                    "url": None
+                }
+            }
+            resp = JSONResponse(
+                status_code=200,
+                content=jsonable_encoder(raw_resp)
+            )
+
+            return resp
+
+        else:
+
+            db_spot_img = DBSpotImage(
+                uuid_str=spot_result.image.uuid,
+                thumbnail=spot_result.image.thumbnail,
+                url=spot_result.image.url,
+                title=spot_result.image.title,
+                reference_id=db_picture.id,
+                meta_data=spot_result.image.meta_data
+            )
+            db_spot = DBSpot(
+                uuid_str=spot_result.uuid,
+                address=spot_result.address,
+                name=spot_result.name,
+                rating=spot_result.rating,
+                rating_n=spot_result.rating_n,
+                place_id=spot_result.place_id,
+                reference=spot_result.reference,
+                types=spot_result.types,
+                geometry=spot_result.geometry,
+                spot_image_id=db_picture.id
+            )
+            db_spot.spot_image = db_spot_img
+            db.add(db_spot)
+            db.commit()
+
+    except Exception as e:
+
+        err_msg = f"endpoint: /v1/mood, error: {repr(e)}"
+        app_logger.error(err_msg)
+
+        err_info = ErrorInfo(
+            err_type=err_type,
+            err_msg=err_msg
+        )
+        return JSONResponse(
+            status_code=err_status_code,
+            content=jsonable_encoder(err_info)
+        )
+
+    raw_resp = {
+        "uuid":       spot_result.uuid,
+        "created_at": spot_result.created_at,
+        "address":    spot_result.address,
+        "name":       spot_result.name,
+        "rating":     spot_result.rating,
+        "rating_n":   spot_result.rating_n,
+        "place_id":   spot_result.place_id,
+        "reference":  spot_result.reference,
+        "types":      spot_result.types,
+        "geometry":   spot_result.geometry,
+        "image": {
+            "id":  spot_result.image.uuid,
+            "url": spot_result.image.thumbnail
+        }
+    }
+    resp = JSONResponse(
+        status_code=200,
+        content=jsonable_encoder(raw_resp)
+    )
+
+    app_logger.info(
+        "endpoint: /v1/spots/search, info: done request for searching spot with picture %s",
+        s3_pic_id
+    )
 
     return resp
 
