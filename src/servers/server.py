@@ -350,6 +350,137 @@ async def post_mood_message(
     return resp
 
 
+@app.post("/v1/mood/{mood_message_id}/picture")
+async def post_mood_message_to_mood_picture(
+        req_body: dict,
+        mood_message_id: str,
+        db: Session = Depends(db_main.get_db_session)
+):
+
+    """
+    post_mood_message_to_mood_picture: get mood picture from mood message
+    curl -XPOST 'http://0.0.0.0:5000/v1/mood/98d1cc6c-421f-4aa5-9268-769ac5c45c33/picture' -H 'Content-Type: application/json' -d '{"used_mood_pic_ids": ["436da2de-1c06-4968-9844-47cb46aa95ba"]}'
+    """
+
+    app_logger.info(
+        "endpoint: /v1/mood/<mood_message_id>/picture, info: get request for generating picture from mood message %s",
+        mood_message_id
+    )
+
+    err_status_code = 500
+    err_type = "FailedToProcessRequest"
+    try:
+
+        # check request body
+        if (req_body is None) or (len(req_body) == 0):
+            err_status_code = 400
+            err_type = "InvalidRequest"
+            raise Exception("request body is empty")
+
+        # parse used mood picture ids
+        used_mood_pic_ids = req_body.get('used_mood_pic_ids')
+        if (used_mood_pic_ids is None):
+            err_status_code = 400
+            err_type = "InvalidRequest"
+            raise Exception("request body missing used_mood_pic_ids")
+        used_mood_pic_id_set = set(used_mood_pic_ids)
+
+        # check mood_message_id
+        if (mood_message_id is None) or (len(mood_message_id) == 0):
+            err_status_code = 400
+            err_type = "InvalidRequest"
+            raise Exception("failed to parse mood_message_id")
+
+        # get mood message from db
+        db_mood_msg = db.get(DBMoodMessage, mood_message_id)
+        if (db_mood_msg is None) or (len(db_mood_msg.content) == 0):
+            err_status_code = 404
+            err_type = "InvalidRequest"
+            raise Exception(f"mood message {mood_message_id} not found in database")
+
+        # try to get from cache
+        db_mood_pic_list = db.query(DBMoodPicture) \
+                             .filter(DBMoodPicture.mood_message_id == db_mood_msg.id) \
+                             .order_by(desc(DBMoodPicture.created_at)) \
+                             .all()
+
+        if (db_mood_pic_list is not None) and (len(db_mood_pic_list) > 0):
+
+            for db_mood_pic in db_mood_pic_list:
+
+                if str(db_mood_pic.id) not in used_mood_pic_id_set:
+
+                    raw_resp = {
+                        "mood_pic_id":   db_mood_pic.id,
+                        "mood_pic_url":  db_mood_pic.url,
+                        "mood_pic_size": db_mood_pic.size
+                    }
+                    resp = JSONResponse(
+                        status_code=200,
+                        content=jsonable_encoder(raw_resp)
+                    )
+
+                    app_logger.info(
+                        "endpoint: /v1/mood/<mood_message_id>/picture, info: found cached mood picture %s for mood message %s",
+                        db_mood_pic.id,
+                        mood_message_id
+                    )
+
+                    return resp
+
+        # if not cached mood picture not found, generate by openai
+        svr_mood_msg = model_utils.db_mood_message_to_server_mood_message(db_mood_msg)
+        image_size   = app_params['mood_image_size']
+        svr_mood_pic = mood_logics.generate_mood_image_by_description(
+            mood_msg=svr_mood_msg,
+            image_size=image_size,
+        )
+
+        # save generated mood picture
+        db_mood_pic = DBMoodPicture(
+            uuid_str=svr_mood_pic.uuid,
+            url=svr_mood_pic.url,
+            size=svr_mood_pic.size,
+            prompt=svr_mood_pic.prompt,
+            model=svr_mood_pic.model,
+            mood_message_id=mood_message_id
+        )
+        db.add(db_mood_pic)
+        db.commit()
+
+    except Exception as e:
+
+        err_msg = f"endpoint: /v1/mood, error: {repr(e)}"
+        app_logger.error(err_msg)
+
+        err_info = ErrorInfo(
+            err_type=err_type,
+            err_msg=err_msg
+        )
+        return JSONResponse(
+            status_code=err_status_code,
+            content=jsonable_encoder(err_info)
+        )
+
+    raw_resp = {
+        "mood_pic_id":   db_mood_pic.id,
+        "mood_pic_url":  db_mood_pic.url,
+        "mood_pic_size": db_mood_pic.size
+    }
+    resp = JSONResponse(
+        status_code=200,
+        content=jsonable_encoder(raw_resp)
+    )
+
+    app_logger.info(
+        "endpoint: /v1/mood/<mood_message_id>/picture, info: done generating picture %s from mood message %s",
+        db_mood_pic.id,
+        mood_message_id
+    )
+
+    return resp
+
+
 @app.get("/v1/pictures/{s3_pic_id}")
 async def get_picture(
         s3_pic_id: str,
@@ -361,7 +492,10 @@ async def get_picture(
     curl -XGET 'http://0.0.0.0:5000/v1/pictures/3496ba34-4022-4109-9e3c-6aae37d658a1'
     """
 
-    app_logger.info("endpoint: /v1/pictures/<s3_pic_id>, info: get request for s3 picture %s", s3_pic_id)
+    app_logger.info(
+        "endpoint: /v1/pictures/<s3_pic_id>, info: get request for s3 picture %s",
+        s3_pic_id
+    )
 
     err_status_code = 500
     err_type = "FailedToProcessRequest"
