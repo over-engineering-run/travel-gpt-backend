@@ -6,7 +6,10 @@ import os
 import sys
 
 import logging
+from typing import Optional
+
 import json
+import random
 
 import uvicorn
 
@@ -145,6 +148,86 @@ async def get_mood_message(
     )
 
     app_logger.info("endpoint: /v1/mood/<mood_message_id>, info: done request for mood message %s", mood_message_id)
+
+    return resp
+
+
+@app.post("/v1/mood/generate")
+async def generate_mood_message(
+        req_body: Optional[dict] = None,
+        db: Session = Depends(db_main.get_db_session)
+):
+
+    """
+    generate_mood_message: endpoint to generate random mood message
+    curl -XPOST 'http://0.0.0.0:5000/v1/mood/generate' -H 'Content-Type: application/json' -d '{"from_cache": "false"}'
+    """
+
+    app_logger.info("endpoint: /v1/mood/generate, info: get request for generating random mood message")
+
+    err_status_code = 500
+    err_type = "FailedToProcessRequest"
+    try:
+
+        # from cache or not
+        if req_body is not None:
+            req_cache_bool_str = req_body.get('from_cache', 'true')
+            req_cache_bool = req_cache_bool_str.lower() != 'false'
+        else:
+            req_cache_bool = True
+
+        # get or generate mood message
+        random_mood_str = ""
+        random_mood_id  = None
+
+        # try to get from cached
+        if req_cache_bool:
+
+            cached_mood_message_id_list = app_resources['cached_mood_message_id_list']
+            cached_msg_n = len(cached_mood_message_id_list)
+
+            if cached_msg_n > 0:
+
+                cached_i = random.randint(0, cached_msg_n-1)
+                cached_msg_id = cached_mood_message_id_list[cached_i]
+
+                db_mood_msg = db.query(DBMoodMessage).get(cached_msg_id)
+                if (db_mood_msg is None) or (len(db_mood_msg.content) == 0):
+                    app_logger.error(f"cached mood message {cached_msg_id} not found in database")
+                else:
+                    random_mood_id  = db_mood_msg.id
+                    random_mood_str = db_mood_msg.content
+
+        # generate by openai
+        if (random_mood_str is None) or (len(random_mood_str.strip()) == 0):
+            random_mood_str = mood_logics.generate_random_mood_message(
+                model=app_params['mood_message_model']
+            )
+
+    except Exception as e:
+        err_msg = f"endpoint: /v1/mood/generate, error: {repr(e)}"
+        app_logger.error(err_msg)
+
+        err_info = ErrorInfo(
+            err_type=err_type,
+            err_msg=err_msg
+        )
+        return JSONResponse(
+            status_code=err_status_code,
+            content=jsonable_encoder(err_info)
+        )
+
+    raw_resp = {
+        "req_cache_bool":  req_cache_bool,
+        "mood_message_id": random_mood_id,
+        "message":         random_mood_str
+    }
+    resp = JSONResponse(
+        status_code=200,
+        content=jsonable_encoder(raw_resp)
+    )
+
+    app_logger.info("endpoint: /v1/mood/generate, info: done request for generating random mood message %s", random_mood_id)
 
     return resp
 
