@@ -27,4 +27,4 @@ RUN python -m pipenv install
 # expose port for backend app
 expose 5000
 
-ENTRYPOINT ["python", "-m", "pipenv", "run", "python", "$BACKEND_ROOT/src/servers/server_runner.py"]
+ENTRYPOINT ["python", "-m", "pipenv", "run", "python", "$BACKEND_ROOT/src/servers/server.py"]
