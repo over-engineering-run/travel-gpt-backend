@@ -121,6 +121,7 @@ def search_spot_by_spot_image(api_key: str, image: spot_models.SpotImage) -> lis
 
     raw_result_list = resp.json().get('results')
     if (raw_result_list is not None) and (len(raw_result_list) > 0):
+
         for result in raw_result_list:
             spot = spot_models.Spot(
                 address=result['formatted_address'],
@@ -129,6 +130,55 @@ def search_spot_by_spot_image(api_key: str, image: spot_models.SpotImage) -> lis
                 rating_n=result['user_ratings_total'],
                 place_id=result['place_id'],
                 reference=result['reference'],
+                types=result['types'],
+                geometry=result['geometry'],
+            )
+            result_list.append(spot)
+
+    return result_list
+
+
+def search_nearby_spots_by_spot(api_key: str, spot: spot_models.Spot) -> list[spot_models.Spot]:
+
+    # request for tourist_attraction
+    gmap_req_url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
+    gmap_req_params = {
+        "location": f"{spot.geometry['location']['lat']}%2C{spot.geometry['location']['lng']}",
+        "radius":   "5000",
+        "type":     "tourist_attraction",
+        "key":      api_key
+    }
+    resp = requests.get(
+        gmap_req_url,
+        params=gmap_req_params,
+        timeout=_GMAP_TIMEOUT
+    )
+
+    # check tourist_attraction response
+    if len(resp.json().get('results')) == 0:
+
+        # request without type
+        gmap_req_params.pop('type', None)
+        resp = requests.get(
+            gmap_req_url,
+            params=gmap_req_params,
+            timeout=_GMAP_TIMEOUT
+        )
+
+    # parse response
+    result_list = []
+
+    raw_result_list = resp.json().get('results')
+    if (raw_result_list is not None) and (len(raw_result_list) > 0):
+
+        for result in raw_result_list:
+            spot = spot_models.Spot(
+                address=result['formatted_address'],
+                name=result['name'],
+                rating=result['rating'],
+                rating_n=result['user_ratings_total'],
+                place_id=result['place_id'],
+                reference=spot.place_id,
                 types=result['types'],
                 geometry=result['geometry'],
             )
