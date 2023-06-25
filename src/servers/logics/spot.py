@@ -126,8 +126,8 @@ def search_spot_by_spot_image(api_key: str, image: spot_models.SpotImage) -> lis
             spot = spot_models.Spot(
                 address=result['formatted_address'],
                 name=result['name'],
-                rating=result['rating'],
-                rating_n=result['user_ratings_total'],
+                rating=result.get('rating', 0),
+                rating_n=result.get('user_ratings_total', 0),
                 place_id=result['place_id'],
                 reference=result['reference'],
                 types=result['types'],
