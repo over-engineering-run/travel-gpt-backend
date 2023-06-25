@@ -673,7 +673,7 @@ async def get_spot_search_by_picture(
 
     """
     post_mood_message_to_mood_picture: get mood picture from mood message
-    curl -XGET 'http://0.0.0.0:5000//v1/spots/search?s3_pic_id=7ddfad56-24b8-4929-9af5-68a681593f41'
+    curl -XGET 'http://0.0.0.0:5000/v1/spots/search?s3_pic_id=7ddfad56-24b8-4929-9af5-68a681593f41'
     """
 
     app_logger.info(
@@ -859,6 +859,82 @@ async def get_spot_search_by_picture(
     app_logger.info(
         "endpoint: /v1/spots/search, info: done request for searching spot with picture %s",
         s3_pic_id
+    )
+
+    return resp
+
+
+@app.get("/v1/spots/{spot_id}/nearby")
+async def get_near_spots_by_spot(
+        spot_id: str,
+        db: Session = Depends(db_main.get_db_session)
+):
+
+    """
+    get_near_spot_by_spot: search for near by spots by a given spot
+    curl -XGET 'http://0.0.0.0:5000/v1/spots/{spot_id}/nearby'
+    """
+
+    app_logger.info(
+        "endpoint: /v1/spots/{spot_id}/nearby, info: get request for searching nearby spots for spot %s",
+        spot_id
+    )
+
+    err_status_code = 500
+    err_type = "FailedToProcessRequest"
+    try:
+
+        pass
+
+    except Exception as e:
+
+        err_msg = f"endpoint: /v1/mood, error: {repr(e)}"
+        app_logger.error(err_msg)
+
+        err_info = ErrorInfo(
+            err_type=err_type,
+            err_msg=err_msg
+        )
+        return JSONResponse(
+            status_code=err_status_code,
+            content=jsonable_encoder(err_info)
+        )
+
+    raw_resp = {
+        "spots": [
+            {
+                "uuid":       "bad5803e-b74a-40e1-9bf4-c37650e08981",
+                "created_at": "2023-05-12 17:52:52.540385+00",
+                "address":    "2CC7+7R, Kitulgala, Sri Lanka",
+                "name":       "Loyston Point Campground",
+                "rating":     4.7,
+                "rating_n":   394,
+                "place_id":   "ChIJgVQAXnJDXIgR6J8QYBCsuSI",
+                "reference":  "ChIJgVQAXnJDXIgR6J8QYBCsuSI",
+                "types":      ["campground","park","lodging","point_of_interest","establishment"],
+                "geometry":   {
+                    "location": {
+                        "lat": -31.0658337, "lng": 30.1807556
+                    },
+                    "viewport": {
+                        "northeast": {"lat": -31.06447787010728, "lng": 30.18210137989273},
+                        "southwest": {"lat": -31.06717752989272, "lng": 30.17940172010728}
+                    }
+                },
+                "image": {
+                    "id":  "8c820169-e26e-474f-a603-981bfd3121c1",
+                    "url": "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcTTHXV46lm5vrScmorp5gM0DAt00SqjyIRBgHLpWJPVfRswVM8F"
+                }
+            }
+        ]
+    }
+    resp = JSONResponse(
+        status_code=200,
+        content=jsonable_encoder(raw_resp)
+    )
+    app_logger.info(
+        "endpoint: /v1/spots/{spot_id}/nearby, info: done request for searching nearby spots for spot %s",
+        spot_id
     )
 
     return resp
