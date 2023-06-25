@@ -143,7 +143,7 @@ def search_nearby_spots_by_spot(api_key: str, spot: spot_models.Spot) -> list[sp
     # request for tourist_attraction
     gmap_req_url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
     gmap_req_params = {
-        "location": f"{spot.geometry['location']['lat']}%2C{spot.geometry['location']['lng']}",
+        "location": f"{spot.geometry['location']['lat']},{spot.geometry['location']['lng']}",
         "radius":   "5000",
         "type":     "tourist_attraction",
         "key":      api_key
@@ -173,10 +173,10 @@ def search_nearby_spots_by_spot(api_key: str, spot: spot_models.Spot) -> list[sp
 
         for result in raw_result_list:
             spot = spot_models.Spot(
-                address=result['formatted_address'],
+                address=result['vicinity'],
                 name=result['name'],
-                rating=result['rating'],
-                rating_n=result['user_ratings_total'],
+                rating=result.get('rating', 0),
+                rating_n=result.get('user_ratings_total', 0),
                 place_id=result['place_id'],
                 reference=spot.place_id,
                 types=result['types'],
