@@ -772,27 +772,10 @@ async def get_spot_search_by_picture(
         # update spot image and spot to db
         if spot_result is None:
 
-            raw_resp = {
-                "spot_id":    None,
-                "created_at": None,
-                "address":    None,
-                "name":       None,
-                "rating":     None,
-                "rating_n":   None,
-                "place_id":   None,
-                "reference":  None,
-                "types":      None,
-                "geometry":   None,
-                "image": {
-                    "id":  None,
-                    "url": None
-                }
-            }
             resp = JSONResponse(
-                status_code=200,
-                content=jsonable_encoder(raw_resp)
+                status_code=404,
+                content={"message": f"not spot found for s3 picture {s3_pic_id}"}
             )
-
             return resp
 
         else:
@@ -872,7 +855,7 @@ async def get_near_spots_by_spot(
 
     """
     get_near_spot_by_spot: search for near by spots by a given spot
-    curl -XGET 'http://0.0.0.0:5000/v1/spots/8c820169-e26e-474f-a603-981bfd3121c1/nearby'
+    curl -XGET 'http://0.0.0.0:5000/v1/spots/7195f42e-9dd9-4388-91e9-3ad1bb7159cb/nearby'
     """
 
     app_logger.info(
@@ -892,7 +875,7 @@ async def get_near_spots_by_spot(
 
         # get spot from db
         db_spot = db.get(DBSpot, spot_id)
-        if (db_spot is None) or (len(db_spot.url) == 0):
+        if (db_spot is None) or (len(db_spot.name) == 0):
             err_status_code = 404
             err_type = "InvalidRequest"
             raise Exception(f"spot {spot_id} not found in database")
