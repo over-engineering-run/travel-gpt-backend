@@ -884,21 +884,44 @@ async def get_near_spots_by_spot(
     err_type = "FailedToProcessRequest"
     try:
 
-        # # check s3_pic_id
-        # if (spot_id is None) or (len(spot_id) == 0):
-        #     err_status_code = 400
-        #     err_type = "InvalidRequest"
-        #     raise Exception("failed to parse spot_id")
+        # check spot_id
+        if (spot_id is None) or (len(spot_id) == 0):
+            err_status_code = 400
+            err_type = "InvalidRequest"
+            raise Exception("failed to parse spot_id")
 
-        # # get s3 picture from db
-        # db_picture = db.get(DBPicture, s3_pic_id)
-        # if (db_picture is None) or (len(db_picture.url) == 0):
-        #     err_status_code = 404
-        #     err_type = "InvalidRequest"
-        #     raise Exception(f"s3 picture {s3_pic_id} not found in database")
+        # get spot from db
+        db_spot = db.get(DBSpot, spot_id)
+        if (db_spot is None) or (len(db_spot.url) == 0):
+            err_status_code = 404
+            err_type = "InvalidRequest"
+            raise Exception(f"spot {spot_id} not found in database")
 
-        pass
+        # nearby spot search
+        svr_spot = model_utils.db_spot_to_server_spot(db_spot)
+        svr_nearby_spot_list = spot_logics.search_nearby_spots_by_spot(
+            api_key=app_params['serpapi_api_key'],
+            spot=svr_spot
+        )
+        app_logger.info("found %d nearby spot(s) for spot %s", len(svr_nearby_spot_list), spot_id)
 
+        # prepare result
+        res_spot_list = []
+        for svr_nearby_spot in svr_nearby_spot_list:
+
+            res_spot = {
+                "spot_id":    svr_nearby_spot.uuid,
+                "created_at": svr_nearby_spot.created_at,
+                "address":    svr_nearby_spot.address,
+                "name":       svr_nearby_spot.name,
+                "rating":     svr_nearby_spot.rating,
+                "rating_n":   svr_nearby_spot.rating_n,
+                "place_id":   svr_nearby_spot.place_id,
+                "reference":  svr_nearby_spot.reference,
+                "types":      svr_nearby_spot.types,
+                "geometry":   svr_nearby_spot.geometry,
+            }
+            res_spot_list.append(res_spot)
 
     except Exception as e:
 
@@ -914,34 +937,7 @@ async def get_near_spots_by_spot(
             content=jsonable_encoder(err_info)
         )
 
-    raw_resp = {
-        "spots": [
-            {
-                "spot_id":       "bad5803e-b74a-40e1-9bf4-c37650e08981",
-                "created_at": "2023-05-12 17:52:52.540385+00",
-                "address":    "2CC7+7R, Kitulgala, Sri Lanka",
-                "name":       "Loyston Point Campground",
-                "rating":     4.7,
-                "rating_n":   394,
-                "place_id":   "ChIJgVQAXnJDXIgR6J8QYBCsuSI",
-                "reference":  "ChIJgVQAXnJDXIgR6J8QYBCsuSI",
-                "types":      ["campground","park","lodging","point_of_interest","establishment"],
-                "geometry":   {
-                    "location": {
-                        "lat": -31.0658337, "lng": 30.1807556
-                    },
-                    "viewport": {
-                        "northeast": {"lat": -31.06447787010728, "lng": 30.18210137989273},
-                        "southwest": {"lat": -31.06717752989272, "lng": 30.17940172010728}
-                    }
-                },
-                "image": {
-                    "id":  "8c820169-e26e-474f-a603-981bfd3121c1",
-                    "url": "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcTTHXV46lm5vrScmorp5gM0DAt00SqjyIRBgHLpWJPVfRswVM8F"
-                }
-            }
-        ]
-    }
+    raw_resp = {"spots": res_spot_list}
     resp = JSONResponse(
         status_code=200,
         content=jsonable_encoder(raw_resp)

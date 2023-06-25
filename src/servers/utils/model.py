@@ -10,10 +10,14 @@ sys.path.insert(0, _root_dir)
 from databases.models.mood import MoodMessage as DBMoodMessage
 from databases.models.mood import MoodPicture as DBMoodPicture
 from databases.models.picture import Picture as DBPicture
+from databases.models.spot import SpotImage as DBSpotImage
+from databases.models.spot import Spot as DBSpot
 
 from servers.models.mood import MoodMessage as SvrMoodMessage
 from servers.models.mood import MoodPicture as SvrMoodPicture
 from servers.models.picture import Picture as SvrPicture
+from servers.models.spot import SpotImage as SvrSpotImage
+from servers.models.spot import Spot as SvrSpot
 
 
 def db_mood_message_to_server_mood_message(db_mood_message: DBMoodMessage) -> SvrMoodMessage:
@@ -52,3 +56,36 @@ def db_picture_to_server_picture(db_picture: DBPicture) -> SvrPicture:
         created_at=db_picture.created_at
     )
     return svr_picture
+
+
+def db_spot_img_to_server_spot_img(db_spot_img: DBSpotImage) -> SvrSpotImage:
+
+    if db_spot_img is None:
+        return None
+
+    svr_spot_img = SvrSpotImage(
+        uuid_str=db_spot_img.id,
+        created_at=db_spot_img.created_at,
+        thumbnail=db_spot_img.thumbnail,
+        url=db_spot_img.url,
+        title=db_spot_img.title
+    )
+    return svr_spot_img
+
+
+def db_spot_to_server_spot(db_spot: DBSpot) -> SvrSpot:
+
+    svr_spot = SvrSpot(
+        uuid_str=db_spot.id,
+        created_at=db_spot.created_at,
+        address=db_spot.address,
+        name=db_spot.name,
+        rating=db_spot.rating,
+        rating_n=db_spot.rating_n,
+        place_id=db_spot.place_id,
+        reference=db_spot.reference,
+        types=db_spot.types,
+        geometry=db_spot.geometry,
+        image=db_spot_img_to_server_spot_img(db_spot.spot_image)
+    )
+    return svr_spot
