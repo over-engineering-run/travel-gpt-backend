@@ -716,7 +716,7 @@ async def get_spot_search_by_picture(
                 if db_spot is not None:
 
                     raw_resp = {
-                        "uuid":       db_spot.id,
+                        "spot_id":    db_spot.id,
                         "created_at": db_spot.created_at,
                         "address":    db_spot.address,
                         "name":       db_spot.name,
@@ -773,7 +773,7 @@ async def get_spot_search_by_picture(
         if spot_result is None:
 
             raw_resp = {
-                "uuid":       None,
+                "spot_id":    None,
                 "created_at": None,
                 "address":    None,
                 "name":       None,
@@ -836,7 +836,7 @@ async def get_spot_search_by_picture(
         )
 
     raw_resp = {
-        "uuid":       spot_result.uuid,
+        "spot_id":    spot_result.uuid,
         "created_at": spot_result.created_at,
         "address":    spot_result.address,
         "name":       spot_result.name,
@@ -872,7 +872,7 @@ async def get_near_spots_by_spot(
 
     """
     get_near_spot_by_spot: search for near by spots by a given spot
-    curl -XGET 'http://0.0.0.0:5000/v1/spots/{spot_id}/nearby'
+    curl -XGET 'http://0.0.0.0:5000/v1/spots/8c820169-e26e-474f-a603-981bfd3121c1/nearby'
     """
 
     app_logger.info(
@@ -884,7 +884,21 @@ async def get_near_spots_by_spot(
     err_type = "FailedToProcessRequest"
     try:
 
+        # # check s3_pic_id
+        # if (spot_id is None) or (len(spot_id) == 0):
+        #     err_status_code = 400
+        #     err_type = "InvalidRequest"
+        #     raise Exception("failed to parse spot_id")
+
+        # # get s3 picture from db
+        # db_picture = db.get(DBPicture, s3_pic_id)
+        # if (db_picture is None) or (len(db_picture.url) == 0):
+        #     err_status_code = 404
+        #     err_type = "InvalidRequest"
+        #     raise Exception(f"s3 picture {s3_pic_id} not found in database")
+
         pass
+
 
     except Exception as e:
 
@@ -903,7 +917,7 @@ async def get_near_spots_by_spot(
     raw_resp = {
         "spots": [
             {
-                "uuid":       "bad5803e-b74a-40e1-9bf4-c37650e08981",
+                "spot_id":       "bad5803e-b74a-40e1-9bf4-c37650e08981",
                 "created_at": "2023-05-12 17:52:52.540385+00",
                 "address":    "2CC7+7R, Kitulgala, Sri Lanka",
                 "name":       "Loyston Point Campground",
