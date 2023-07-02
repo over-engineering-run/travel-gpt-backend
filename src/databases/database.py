@@ -14,7 +14,7 @@ from init import params as params_init
 
 # init database
 _envs = params_init.load_environment_variables()
-engine = create_engine(_envs['db_dsn'])
+engine = create_engine(_envs['db_dsn'], pool_pre_ping=True, pool_recycle=3600)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
