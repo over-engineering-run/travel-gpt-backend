@@ -884,7 +884,8 @@ async def get_near_spots_by_spot(
         svr_spot = model_utils.db_spot_to_server_spot(db_spot)
         svr_nearby_spot_list = spot_logics.search_nearby_spots_by_spot(
             api_key=app_params['google_api_key'],
-            spot=svr_spot
+            spot=svr_spot,
+            logger=app_logger
         )
         app_logger.info("found %d nearby spot(s) for spot %s", len(svr_nearby_spot_list), spot_id)
 

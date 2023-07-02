@@ -1,6 +1,8 @@
 import os
 import sys
 
+import logging
+
 from wrapt_timeout_decorator import timeout
 from serpapi import GoogleSearch
 import requests
@@ -138,7 +140,11 @@ def search_spot_by_spot_image(api_key: str, image: spot_models.SpotImage) -> lis
     return result_list
 
 
-def search_nearby_spots_by_spot(api_key: str, spot: spot_models.Spot) -> list[spot_models.Spot]:
+def search_nearby_spots_by_spot(
+        api_key: str,
+        spot: spot_models.Spot,
+        logger: logging.Logger
+) -> list[spot_models.Spot]:
 
     # request for tourist_attraction
     gmap_req_url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
@@ -172,6 +178,13 @@ def search_nearby_spots_by_spot(api_key: str, spot: spot_models.Spot) -> list[sp
     if (raw_result_list is not None) and (len(raw_result_list) > 0):
 
         for result in raw_result_list:
+
+            diff_set = {'vicinity', 'name', 'place_id', 'types', 'geometry'} - set(result.keys())
+
+            if len(diff_set) > 0:
+                logger.warning("result nearby spot missing %s", diff_set)
+                continue
+
             spot = spot_models.Spot(
                 address=result['vicinity'],
                 name=result['name'],
@@ -180,7 +193,7 @@ def search_nearby_spots_by_spot(api_key: str, spot: spot_models.Spot) -> list[sp
                 place_id=result['place_id'],
                 reference=spot.place_id,
                 types=result['types'],
-                geometry=result['geometry'],
+                geometry=result['geometry']
             )
             result_list.append(spot)
 
