@@ -27,6 +27,7 @@ sys.path.insert(0, _root_dir)
 from utils import json as js_utils
 
 from servers.models.error import ErrorInfo
+from servers.models.gunicorn import StandaloneApplication
 from servers.models import mood as mood_models
 
 from servers.utils import init as server_init
@@ -936,9 +937,8 @@ async def get_near_spots_by_spot(
 
 if __name__ == '__main__':
 
-    uvicorn.run(
-        app=app,
-        host=app_params['app_host'],
-        port=int(app_params['app_port']),
-        log_level=app_logger.level
-    )
+    StandaloneApplication(
+        app,
+        app_resources['server_options']
+
+    ).run()

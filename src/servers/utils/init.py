@@ -1,5 +1,6 @@
 import os
 import sys
+import multiprocessing
 import logging
 
 import argparse
@@ -99,11 +100,17 @@ def _init_server_params() -> dict:
     return params
 
 
-def _build_server_resources() -> dict:
-    return {}
+def _build_server_resources(app_params: dict) -> dict:
 
+    # get number of workers by heuristic
+    worker_n = (multiprocessing.cpu_count() * 2) + 1
 
-def _build_server_resources() -> dict:
+    # start UvicornWorkers with gunicorn
+    server_options = {
+        "bind": f"{app_params['app_host']}:{app_params['app_port']}",
+        "workers": worker_n,
+        "worker_class": "uvicorn.workers.UvicornWorker",
+    }
 
     # start db session
     db = db_main.SessionLocal()
@@ -120,16 +127,20 @@ def _build_server_resources() -> dict:
     # close db session
     db.close()
 
-    return {
+    # result
+    resources = {
+        "server_options": server_options,
         'cached_mood_message_id_list': list(set(cached_msg_id_list))
     }
+
+    return resources
 
 
 def init_server() -> tuple[dict, dict, logging.Logger]:
 
     # init app params and resources
     app_params    = _init_server_params()
-    app_resources = _build_server_resources()
+    app_resources = _build_server_resources(app_params=app_params)
 
     # init logger
     logging.basicConfig(encoding='utf-8', level=logging.INFO)
@@ -139,11 +150,17 @@ def init_server() -> tuple[dict, dict, logging.Logger]:
     init_sentry.init_sentry(dsn=app_params['sentry_dsn'])
 
     # log debug info
-    info_str = json.dumps(
+    params_info_str = json.dumps(
         app_params,
         default=js_utils.json_serializer,
         indent=4
     )
-    app_logger.info(info_str)
+    server_options_info_str = json.dumps(
+        app_resources['server_options'],
+        default=js_utils.json_serializer,
+        indent=4
+    )
+    app_logger.info("app parameters: %s", params_info_str)
+    app_logger.info("server options: %s", server_options_info_str)
 
     return app_params, app_resources, app_logger
