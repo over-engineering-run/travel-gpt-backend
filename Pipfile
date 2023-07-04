@@ -7,6 +7,7 @@ name = "pypi"
 boto3 = "*"
 fastapi = "*"
 google-search-results = "*"
+gunicorn = "*"
 openai = "*"
 psycopg2 = "*"
 sentry-sdk = {extras = ["fastapi"], version = "*"}
