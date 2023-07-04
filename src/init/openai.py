@@ -5,8 +5,8 @@ import logging
 
 import openai
 
-root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, root_dir)
+_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _root_dir)
 
 from utils import misc as misc_utils
 

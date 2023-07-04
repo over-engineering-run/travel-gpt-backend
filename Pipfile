@@ -4,22 +4,20 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-openai = "*"
 boto3 = "*"
+fastapi = "*"
 google-search-results = "*"
-flask = "*"
-flask-cors = "*"
-waitress = "*"
-flask-limiter = "*"
-wrapt-timeout-decorator = "*"
-flask-sqlalchemy = "*"
-flask-migrate = "*"
+openai = "*"
 psycopg2 = "*"
+sentry-sdk = {extras = ["fastapi"], version = "*"}
+sqlalchemy = "*"
+uvicorn = {extras = ["standard"], version = "*"}
+wrapt-timeout-decorator = "*"
 
 [dev-packages]
+flake8 = "*"
 ipython = "*"
 jupyterlab = "*"
-flake8 = "*"
 pylint = "*"
 
 [requires]

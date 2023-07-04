@@ -5,8 +5,8 @@ import logging
 import openai
 from wrapt_timeout_decorator import timeout
 
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.insert(0, root_dir)
+_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, _root_dir)
 
 from utils import s3 as s3_utils
 from utils import misc as misc_utils
@@ -59,6 +59,6 @@ def save_picture_to_s3_by_url(
     )
     pic.url = s3_http_url
 
-    logging.info("done upload picture to %s ", pic.url)
+    logging.info("done upload picture to %s", pic.url)
 
     return pic

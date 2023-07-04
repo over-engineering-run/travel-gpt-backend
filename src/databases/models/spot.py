@@ -4,28 +4,28 @@ import sys
 import datetime
 import uuid
 
+from sqlalchemy import Column, String, Float, Integer, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
 from sqlalchemy.orm import relationship
 from sqlalchemy import func
 
+_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, _root_dir)
 
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.insert(0, root_dir)
-
-from databases.databases import db
+from databases.database import Base
 
 
-class SpotImage(db.Model):
+class SpotImage(Base):
 
     __tablename__ = 'spot_images'
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    thumbnail = db.Column(db.String)
-    url = db.Column(db.String)
-    title = db.Column(db.String)
-    reference_id = db.Column(UUID(as_uuid=True))
-    meta_data = db.Column(JSONB)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    thumbnail = Column(String)
+    url = Column(String)
+    title = Column(String)
+    reference_id = Column(UUID(as_uuid=True))
+    meta_data = Column(JSONB)
 
     spot = relationship('Spot', back_populates="spot_image")
 
@@ -47,22 +47,22 @@ class SpotImage(db.Model):
         self.meta_data    = meta_data
 
 
-class Spot(db.Model):
+class Spot(Base):
 
     __tablename__ = 'spots'
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    address = db.Column(db.String)
-    name = db.Column(db.String)
-    rating = db.Column(db.Float)
-    rating_n = db.Column(db.Integer)
-    place_id = db.Column(db.String)
-    reference = db.Column(db.String)
-    types = db.Column(ARRAY(db.String))
-    geometry = db.Column(JSONB)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    address = Column(String)
+    name = Column(String)
+    rating = Column(Float)
+    rating_n = Column(Integer)
+    place_id = Column(String)
+    reference = Column(String)
+    types = Column(ARRAY(String))
+    geometry = Column(JSONB)
 
-    spot_image_id = db.Column(UUID(as_uuid=True), db.ForeignKey("spot_images.id"))
+    spot_image_id = Column(UUID(as_uuid=True), ForeignKey("spot_images.id"))
     spot_image = relationship('SpotImage', back_populates="spot")
 
     def __init__(

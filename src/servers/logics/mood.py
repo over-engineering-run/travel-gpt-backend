@@ -5,8 +5,8 @@ import logging
 import openai
 from wrapt_timeout_decorator import timeout
 
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.insert(0, root_dir)
+_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, _root_dir)
 
 from utils import s3 as s3_utils
 from utils import misc as misc_utils
@@ -18,7 +18,7 @@ _MSG_RETRY = 2
 _MSG_TIMEOUT = 10.0
 
 _MSG_PROMPT = """
-Help me tp generate a random easy-to-understand sentence to describe my mood.
+Help me tp generate a random easy-to-understand short sentence to describe my mood.
 """.strip()
 
 _IMG_RETRY = 1
