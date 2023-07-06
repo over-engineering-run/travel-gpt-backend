@@ -155,5 +155,5 @@ if __name__ == '__main__':
         fail_n,
         skip_n,
         script_params['n'],
-        "done caching mood message script"
+        "done cache mood message script"
     )
