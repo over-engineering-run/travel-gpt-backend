@@ -91,22 +91,18 @@ if __name__ == '__main__':
                                    DBMoodPicture,
                                    DBMoodMessage.id == DBMoodPicture.mood_message_id,
                                    isouter=True
-                               ) \
-                               .join(
+                               ).join(
                                    DBPicture,
                                    DBMoodPicture.id == DBPicture.reference_id,
                                    isouter=True
-                               ) \
-                               .filter(
+                               ).filter(
                                    DBMoodMessage.cached == True
-                               ) \
-                               .filter(
+                               ).filter(
                                    or_(
                                        DBMoodPicture.id == None,
                                        DBPicture.id == None
                                    )
-                               ) \
-                               .all()
+                               ).all()
 
     success_n, fail_n, total_n = 0, 0, len(cached_msg_list)
     for msg_i, cached_msg in enumerate(cached_msg_list):
