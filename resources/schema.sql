@@ -54,7 +54,8 @@ CREATE TABLE IF NOT EXISTS "pictures" (
     size varchar(16),
     url text,
     reference_type varchar(16) CHECK (reference_type IN ('mood_pic')),
-    reference_id uuid
+    reference_id uuid,
+    found_spot boolean
 );
 
 -- DROP TABLE IF EXISTS "spot_images" CASCADE;
