@@ -28,7 +28,7 @@ def db_mood_message_to_server_mood_message(db_mood_message: DBMoodMessage) -> Sv
         content=db_mood_message.content,
         prompt=db_mood_message.prompt,
         model=db_mood_message.model,
-        cached=db_mood_message.cached
+        cached=db_mood_message.cached,
     )
     return svr_mood_message
 
@@ -53,7 +53,8 @@ def db_picture_to_server_picture(db_picture: DBPicture) -> SvrPicture:
         filename=db_picture.filename,
         url=db_picture.url,
         size=db_picture.size,
-        created_at=db_picture.created_at
+        created_at=db_picture.created_at,
+        found_spot=db_picture.found_spot,
     )
     return svr_picture
 

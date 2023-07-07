@@ -4,7 +4,7 @@ import sys
 import datetime
 import uuid
 
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, String, DateTime, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import func
@@ -26,6 +26,7 @@ class Picture(Base):
     url = Column(String)
     reference_type = Column(String)
     reference_id = Column(UUID(as_uuid=True))
+    found_spot = Column(Boolean)
 
     def __init__(
             self,
@@ -35,6 +36,7 @@ class Picture(Base):
             url: str = None,
             reference_type: str = None,
             reference_id: str = None,
+            found_spot: bool = None
     ):
 
         self.id             = uuid_str or str(uuid.uuid4())
@@ -43,3 +45,4 @@ class Picture(Base):
         self.url            = url
         self.reference_type = reference_type
         self.reference_id   = reference_id
+        self.found_spot     = found_spot
