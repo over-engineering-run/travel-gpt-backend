@@ -87,8 +87,10 @@ def search_spot_image_by_pic_url(api_key: str, pic_url: str) -> list[spot_models
         else:
             other_matches.append(v_match)
 
-    filtered_matches = prioritized_matches + other_matches
-    filtered_matches = filtered_matches[:10]
+    filtered_matches = prioritized_matches
+
+    # filtered_matches = prioritized_matches + other_matches
+    # filtered_matches = filtered_matches[:10]
 
     # if len(prioritized_matches) > 0:
     #     filtered_matches = prioritized_matches
