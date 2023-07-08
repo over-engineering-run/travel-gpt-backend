@@ -12,7 +12,8 @@ class Picture:
             created_at: datetime.datetime = None,
             filename:   str = None,
             size:       str = None,
-            url:        str = None
+            url:        str = None,
+            found_spot: bool = None
     ):
 
         time_now        = datetime.datetime.now()
@@ -23,6 +24,7 @@ class Picture:
         self.filename   = filename or f'{timestamp_str}.{self.uuid}.png'
         self.size       = size
         self.url        = url
+        self.found_spot = found_spot
 
         self.meta_data = {
             "ref_id":   None,

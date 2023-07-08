@@ -18,7 +18,7 @@ from fastapi import FastAPI, Depends, Response
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
-from sqlalchemy import desc
+from sqlalchemy import desc, and_
 from sqlalchemy.orm import Session
 
 _root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -360,7 +360,7 @@ async def post_mood_message_to_mood_picture(
 
     """
     post_mood_message_to_mood_picture: get mood picture from mood message
-    curl -XPOST 'http://0.0.0.0:5000/v1/mood/98d1cc6c-421f-4aa5-9268-769ac5c45c33/picture' -H 'Content-Type: application/json' -d '{"used_mood_pic_ids": ["436da2de-1c06-4968-9844-47cb46aa95ba"]}'
+    curl -XPOST 'http://0.0.0.0:5000/v1/mood/4498fca1-ad59-4dfa-b625-c58a454e1138/picture' -H 'Content-Type: application/json' -d '{"used_mood_pic_ids": []}'
     """
 
     app_logger.info(
@@ -400,21 +400,29 @@ async def post_mood_message_to_mood_picture(
             raise Exception(f"mood message {mood_message_id} not found in database")
 
         # try to get from cache
-        db_mood_pic_list = db.query(DBMoodPicture) \
-                             .filter(DBMoodPicture.mood_message_id == db_mood_msg.id) \
-                             .order_by(desc(DBMoodPicture.created_at)) \
-                             .all()
+        db_s3_pic_list = db.query(DBPicture) \
+                           .join(
+                               DBMoodPicture,
+                               DBMoodPicture.id == DBPicture.reference_id,
+                               isouter=True
+                           ).filter(
+                               DBPicture.reference_type == "mood_pic"
+                           ).filter(
+                               DBMoodPicture.mood_message_id == db_mood_msg.id
+                           ).order_by(
+                               desc(DBMoodPicture.created_at)
+                           ).all()
 
-        if (db_mood_pic_list is not None) and (len(db_mood_pic_list) > 0):
+        if (db_s3_pic_list is not None) and (len(db_s3_pic_list) > 0):
 
-            for db_mood_pic in db_mood_pic_list:
+            for db_s3_pic in db_s3_pic_list:
 
-                if str(db_mood_pic.id) not in used_mood_pic_id_set:
+                if str(db_s3_pic.reference_id) not in used_mood_pic_id_set:
 
                     raw_resp = {
-                        "mood_pic_id":   db_mood_pic.id,
-                        "mood_pic_url":  db_mood_pic.url,
-                        "mood_pic_size": db_mood_pic.size
+                        "mood_pic_id":   db_s3_pic.reference_id,
+                        "mood_pic_url":  db_s3_pic.url,
+                        "mood_pic_size": db_s3_pic.size
                     }
                     resp = JSONResponse(
                         status_code=200,
@@ -423,7 +431,7 @@ async def post_mood_message_to_mood_picture(
 
                     app_logger.info(
                         "endpoint: /v1/mood/<mood_message_id>/picture, info: found cached mood picture %s for mood message %s",
-                        db_mood_pic.id,
+                        db_s3_pic.reference_id,
                         mood_message_id
                     )
 
@@ -940,5 +948,4 @@ if __name__ == '__main__':
     StandaloneApplication(
         app,
         app_resources['server_options']
-
     ).run()
