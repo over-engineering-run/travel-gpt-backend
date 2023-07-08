@@ -948,5 +948,4 @@ if __name__ == '__main__':
     StandaloneApplication(
         app,
         app_resources['server_options']
-
     ).run()

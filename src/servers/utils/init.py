@@ -107,9 +107,10 @@ def _build_server_resources(app_params: dict) -> dict:
 
     # start UvicornWorkers with gunicorn
     server_options = {
-        "bind": f"{app_params['app_host']}:{app_params['app_port']}",
-        "workers": worker_n,
+        "bind":         f"{app_params['app_host']}:{app_params['app_port']}",
+        "workers":      worker_n,
         "worker_class": "uvicorn.workers.UvicornWorker",
+        "timeout":      300,
     }
 
     # start db session
