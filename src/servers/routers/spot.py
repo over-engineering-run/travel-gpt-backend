@@ -37,7 +37,7 @@ async def get_spot_search_by_picture(
 
     """
     get_spot_search_by_picture: search spot by s3 picture
-    curl -XGET 'http://0.0.0.0:5000/v1/spots/search?s3_pic_id=d1e82e9f-bc4f-4a97-991b-0e37d50dd6c9'
+    curl -XGET 'http://0.0.0.0:5000/v1/spots/search?s3_pic_id=48cdc742-ffac-4a68-a472-66f478daba17'
     """
 
     app_logger.info(
@@ -71,11 +71,14 @@ async def get_spot_search_by_picture(
 
         # try to get from cache
         db_spot_list = db.query(DBSpot) \
-                    .filter(
-                        DBSpot.spot_image.reference_id == db_picture.id
-                    ).order_by(
-                        desc(DBSpot.spot_image.created_at)
-                    ).all()
+                         .join(
+                             DBSpotImage,
+                             isouter=True
+                         ).filter(
+                             DBSpotImage.reference_id == db_picture.id
+                         ).order_by(
+                             desc(DBSpotImage.created_at)
+                         ).all()
 
         for db_spot in db_spot_list:
 
