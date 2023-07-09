@@ -36,7 +36,7 @@ async def get_picture(
 
     """
     get_picture: get s3 picture info from by id
-    curl -XGET 'http://0.0.0.0:5000/v1/pictures/3496ba34-4022-4109-9e3c-6aae37d658a1'
+    curl -XGET 'http://0.0.0.0:5000/v1/pictures/d1e82e9f-bc4f-4a97-991b-0e37d50dd6c9'
     """
 
     app_logger.info(
@@ -93,7 +93,8 @@ async def get_picture(
     return resp
 
 
-@router.post("/v1/pictures")
+@router.post("")
+@router.post("/")
 async def post_picture(
         req_body: dict,
         db: Session = Depends(db_main.get_db_session)
@@ -101,7 +102,7 @@ async def post_picture(
 
     """
     post_picture: save picture to s3
-    curl -XPOST 'http://0.0.0.0:5000/v1/pictures' -H 'Content-Type: application/json' -d '{"type": "mood_pic", "id": "0d2622f2-f484-487a-a647-6b5ef2da1252"}'
+    curl -XPOST 'http://0.0.0.0:5000/v1/pictures' -H 'Content-Type: application/json' -d '{"type": "mood_pic", "id": "3cb3c712-0b16-49b5-b181-9ee8012f7fc1"}'
     """
 
     err_status_code = 500

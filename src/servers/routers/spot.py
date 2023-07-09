@@ -37,7 +37,7 @@ async def get_spot_search_by_picture(
 
     """
     get_spot_search_by_picture: search spot by s3 picture
-    curl -XGET 'http://0.0.0.0:5000/v1/spots/search?s3_pic_id=7ddfad56-24b8-4929-9af5-68a681593f41'
+    curl -XGET 'http://0.0.0.0:5000/v1/spots/search?s3_pic_id=d1e82e9f-bc4f-4a97-991b-0e37d50dd6c9'
     """
 
     app_logger.info(
@@ -222,7 +222,7 @@ async def get_near_spots_by_spot(
 
     """
     get_near_spot_by_spot: search for near by spots by a given spot
-    curl -XGET 'http://0.0.0.0:5000/v1/spots/7195f42e-9dd9-4388-91e9-3ad1bb7159cb/nearby'
+    curl -XGET 'http://0.0.0.0:5000/v1/spots/5d9b7970-5567-48fd-85f4-3a29080b2c38/nearby'
     """
 
     app_logger.info(
