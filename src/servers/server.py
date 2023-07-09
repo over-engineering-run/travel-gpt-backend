@@ -22,9 +22,9 @@ sys.path.insert(0, _root_dir)
 
 from servers.dependencies import app_params, app_resources, app_logger
 
-from servers.router.mood import router as mood_router
-from servers.router.picture import router as picture_router
-from servers.router.spot import router as spot_router
+from servers.routers.mood import router as mood_router
+from servers.routers.picture import router as picture_router
+from servers.routers.spot import router as spot_router
 
 from servers.models.error import ErrorInfo
 from servers.models.gunicorn import StandaloneApplication

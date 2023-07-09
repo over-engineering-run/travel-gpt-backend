@@ -44,7 +44,7 @@ async def get_mood_message(
 
     """
     get_mood_message: get mood message content by id
-    curl -XGET 'http://0.0.0.0:5000/v1/mood/dece78f8-5fce-42c3-8fb3-ed1cc2929e63'
+    curl -XGET 'http://0.0.0.0:5000/v1/mood/c0793ebf-fbc9-4e01-bc39-f2d6184e14f2'
     """
 
     app_logger.info(
@@ -188,6 +188,7 @@ async def generate_mood_message(
     return resp
 
 
+@router.post("")
 @router.post("/")
 async def post_mood_message(
         req_body: dict,
@@ -196,7 +197,7 @@ async def post_mood_message(
 
     """
     post_mood_message: save mood message to db
-    curl -XPOST 'http://0.0.0.0:5000/v1/mood' -H 'Content-Type: application/json' -d '{"to_cache": "true", "message": "I am happy", "mood_message_id": null}'
+    curl -XPOST 'http://0.0.0.0:5000/v1/mood' -H 'Content-Type: application/json' -d '{"to_cache": "false", "message": "I am happy", "mood_message_id": null}'
     """
 
     app_logger.info("endpoint: /v1/mood, info: get request for saving mood message to db")
@@ -302,7 +303,7 @@ async def post_mood_message_to_mood_picture(
 
     """
     post_mood_message_to_mood_picture: generate mood picture from mood message
-    curl -XPOST 'http://0.0.0.0:5000/v1/mood/4498fca1-ad59-4dfa-b625-c58a454e1138/picture' -H 'Content-Type: application/json' -d '{"used_mood_pic_ids": []}'
+    curl -XPOST 'http://0.0.0.0:5000/v1/mood/c0793ebf-fbc9-4e01-bc39-f2d6184e14f2/picture' -H 'Content-Type: application/json' -d '{"used_mood_pic_ids": []}'
     """
 
     app_logger.info(
