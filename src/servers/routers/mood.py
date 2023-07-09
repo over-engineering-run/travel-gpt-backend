@@ -301,7 +301,7 @@ async def post_mood_message_to_mood_picture(
 ):
 
     """
-    post_mood_message_to_mood_picture: get mood picture from mood message
+    post_mood_message_to_mood_picture: generate mood picture from mood message
     curl -XPOST 'http://0.0.0.0:5000/v1/mood/4498fca1-ad59-4dfa-b625-c58a454e1138/picture' -H 'Content-Type: application/json' -d '{"used_mood_pic_ids": []}'
     """
 
@@ -341,6 +341,7 @@ async def post_mood_message_to_mood_picture(
             err_type = "InvalidRequest"
             raise Exception(f"mood message {mood_message_id} not found in database")
 
+        # TODO: update cache code to prioritize those found_spot = true
         # try to get from cache
         db_s3_pic_list = db.query(DBPicture) \
                            .join(
