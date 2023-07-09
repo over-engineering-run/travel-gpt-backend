@@ -342,7 +342,6 @@ async def post_mood_message_to_mood_picture(
             err_type = "InvalidRequest"
             raise Exception(f"mood message {mood_message_id} not found in database")
 
-        # TODO: update cache code to prioritize those found_spot = true
         # try to get from cache
         db_s3_pic_list = db.query(DBPicture) \
                            .join(
@@ -354,6 +353,7 @@ async def post_mood_message_to_mood_picture(
                            ).filter(
                                DBMoodPicture.mood_message_id == db_mood_msg.id
                            ).order_by(
+                               desc(DBPicture.found_spot),
                                desc(DBMoodPicture.created_at)
                            ).all()
 
