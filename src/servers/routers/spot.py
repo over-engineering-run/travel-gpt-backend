@@ -262,6 +262,7 @@ async def get_near_spots_by_spot(
             spot=svr_spot,
             logger=app_logger
         )
+        svr_nearby_spot_list = svr_nearby_spot_list[:10]
         app_logger.info("found %d nearby spot(s) for spot %s", len(svr_nearby_spot_list), spot_id)
 
         # prepare result
