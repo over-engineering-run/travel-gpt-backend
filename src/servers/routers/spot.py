@@ -62,53 +62,57 @@ async def get_spot_search_by_picture(
             err_type = "InvalidRequest"
             raise Exception(f"s3 picture {s3_pic_id} not found in database")
 
-        # TODO: 1. update cache code to use join 2. check spot thumbnail to start with http
+        if (db_picture.found_spot is False):
+            resp = JSONResponse(
+                status_code=404,
+                content={"message": f"no spot found for s3 picture {s3_pic_id}"}
+            )
+            return resp
+
         # try to get from cache
-        db_spot_img_list = db.query(DBSpotImage) \
-                             .filter(DBSpotImage.reference_id == db_picture.id) \
-                             .order_by(desc(DBSpotImage.created_at)) \
-                             .all()
+        db_spot_list = db.query(DBSpot) \
+                    .filter(
+                        DBSpot.spot_image.reference_id == db_picture.id
+                    ).order_by(
+                        desc(DBSpot.spot_image.created_at)
+                    ).all()
 
-        if (db_spot_img_list is not None) and (len(db_spot_img_list) > 0):
+        for db_spot in db_spot_list:
 
-            for db_spot_img in db_spot_img_list:
+            if (db_spot is not None) and \
+               (db_spot.spot_image is not None) and \
+               (db_spot.spot_image.thumbnail is not None) and \
+               (len(db_spot.spot_image.thumbnail) > 0) and \
+               (db_spot.spot_image.thumbnail.strip().startswith('http')):
 
-                db_spot = db.query(DBSpot) \
-                            .filter(DBSpot.spot_image_id == db_spot_img.id) \
-                            .order_by(desc(DBSpot.created_at)) \
-                            .first()
-
-                if db_spot is not None:
-
-                    raw_resp = {
-                        "spot_id":    db_spot.id,
-                        "created_at": db_spot.created_at,
-                        "address":    db_spot.address,
-                        "name":       db_spot.name,
-                        "rating":     db_spot.rating,
-                        "rating_n":   db_spot.rating_n,
-                        "place_id":   db_spot.place_id,
-                        "reference":  db_spot.reference,
-                        "types":      db_spot.types,
-                        "geometry":   db_spot.geometry,
-                        "image": {
-                            "id":  db_spot_img.id,
-                            "url": db_spot_img.thumbnail
-                        }
+                raw_resp = {
+                    "spot_id":    db_spot.id,
+                    "created_at": db_spot.created_at,
+                    "address":    db_spot.address,
+                    "name":       db_spot.name,
+                    "rating":     db_spot.rating,
+                    "rating_n":   db_spot.rating_n,
+                    "place_id":   db_spot.place_id,
+                    "reference":  db_spot.reference,
+                    "types":      db_spot.types,
+                    "geometry":   db_spot.geometry,
+                    "image": {
+                        "id":  db_spot.spot_image.id,
+                        "url": db_spot.spot_image.thumbnail,
                     }
+                }
+                resp = JSONResponse(
+                    status_code=200,
+                    content=jsonable_encoder(raw_resp)
+                )
 
-                    resp = JSONResponse(
-                        status_code=200,
-                        content=jsonable_encoder(raw_resp)
-                    )
+                app_logger.info(
+                    "endpoint: /v1/spots/search, info: found cached spot %s for picture %s",
+                    db_spot.id,
+                    s3_pic_id
+                )
 
-                    app_logger.info(
-                        "endpoint: /v1/spots/search, info: found cached spot %s for picture %s",
-                        db_spot.id,
-                        s3_pic_id
-                    )
-
-                    return resp
+                return resp
 
         # TODO: resolve worker timeout
         # search: s3 picture (mood image) -> spot image
@@ -141,7 +145,7 @@ async def get_spot_search_by_picture(
 
             resp = JSONResponse(
                 status_code=404,
-                content={"message": f"not spot found for s3 picture {s3_pic_id}"}
+                content={"message": f"no spot found for s3 picture {s3_pic_id}"}
             )
             return resp
 
