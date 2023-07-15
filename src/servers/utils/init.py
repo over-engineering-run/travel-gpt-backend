@@ -39,6 +39,8 @@ def _init_server_params() -> dict:
         raise Exception("Missing env APP_HOST")
     if envs['app_port'] is None:
         raise Exception("Missing env APP_PORT")
+    if envs['app_auth_token'] is None:
+        raise Exception("Missing env APP_AUTH_TOKEN")
 
     # aws
     if envs['aws_access_id'] is None:
@@ -82,6 +84,7 @@ def _init_server_params() -> dict:
     params = {
         'app_host':           envs['app_host'],
         'app_port':           envs['app_port'],
+        'app_auth_token':     envs['app_auth_token'],
         'aws_access_id':      envs['aws_access_id'],
         'aws_access_key':     envs['aws_access_key'],
         'aws_access_region':  envs['aws_access_region'],
