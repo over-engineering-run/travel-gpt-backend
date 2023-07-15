@@ -6,8 +6,9 @@ def load_environment_variables():
     """load all environment variables"""
 
     # app
-    app_host  = os.getenv("APP_HOST", "0.0.0.0")
-    app_port  = os.getenv("APP_PORT", "5000")
+    app_host        = os.getenv("APP_HOST", "0.0.0.0")
+    app_port        = os.getenv("APP_PORT", "5000")
+    app_auth_token  = os.getenv("APP_AUTH_TOKEN")
 
     # aws
     aws_access_id     = os.getenv("AWS_ACCESS_KEY_ID")
@@ -39,6 +40,7 @@ def load_environment_variables():
     envs = {
         'app_host':           app_host,
         'app_port':           app_port,
+        'app_auth_token':     app_auth_token,
         'aws_access_id':      aws_access_id,
         'aws_access_key':     aws_access_key,
         'aws_access_region':  aws_access_region,
