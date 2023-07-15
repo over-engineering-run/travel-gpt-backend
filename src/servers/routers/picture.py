@@ -29,7 +29,7 @@ router = APIRouter(
 
 
 @router.get("/{s3_pic_id}")
-async def get_picture(
+def get_picture(
         s3_pic_id: str,
         db: Session = Depends(db_main.get_db_session)
 ):
@@ -95,7 +95,7 @@ async def get_picture(
 
 @router.post("")
 @router.post("/")
-async def post_picture(
+def post_picture(
         req_body: dict,
         db: Session = Depends(db_main.get_db_session)
 ):

@@ -30,7 +30,7 @@ router = APIRouter(
 
 
 @router.get("/search")
-async def get_spot_search_by_picture(
+def get_spot_search_by_picture(
         s3_pic_id: str,
         db: Session = Depends(db_main.get_db_session)
 ):
@@ -222,7 +222,7 @@ async def get_spot_search_by_picture(
 
 
 @router.get("/{spot_id}/nearby")
-async def get_near_spots_by_spot(
+def get_near_spots_by_spot(
         spot_id: str,
         db: Session = Depends(db_main.get_db_session)
 ):

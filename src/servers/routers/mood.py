@@ -37,7 +37,7 @@ router = APIRouter(
 
 
 @router.get("/{mood_message_id}")
-async def get_mood_message(
+def get_mood_message(
         mood_message_id: str,
         db: Session = Depends(db_main.get_db_session)
 ):
@@ -101,7 +101,7 @@ async def get_mood_message(
 
 
 @router.post("/generate")
-async def generate_mood_message(
+def generate_mood_message(
         req_body: Optional[dict] = None,
         db: Session = Depends(db_main.get_db_session)
 ):
@@ -190,7 +190,7 @@ async def generate_mood_message(
 
 @router.post("")
 @router.post("/")
-async def post_mood_message(
+def post_mood_message(
         req_body: dict,
         db: Session = Depends(db_main.get_db_session)
 ):
@@ -295,7 +295,7 @@ async def post_mood_message(
 
 
 @router.post("/{mood_message_id}/picture")
-async def post_mood_message_to_mood_picture(
+def post_mood_message_to_mood_picture(
         req_body: dict,
         mood_message_id: str,
         db: Session = Depends(db_main.get_db_session)
