@@ -12,7 +12,7 @@ import json
 
 import uvicorn
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
@@ -20,7 +20,7 @@ from fastapi.responses import JSONResponse
 _root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _root_dir)
 
-from servers.dependencies import app_params, app_resources, app_logger
+from servers.dependencies import app_params, app_resources, app_logger, verify_token
 
 from servers.routers.mood import router as mood_router
 from servers.routers.picture import router as picture_router
@@ -31,7 +31,7 @@ from servers.models.gunicorn import StandaloneApplication
 from servers.utils import init as server_init
 
 
-app = FastAPI()
+app = FastAPI(dependencies=[Depends(verify_token)])
 
 app.include_router(mood_router)
 app.include_router(picture_router)
