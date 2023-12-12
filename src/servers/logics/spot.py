@@ -17,18 +17,18 @@ _GLEN_TIMEOUT = 60.0
 _GMAP_TIMEOUT = 10.0
 
 _SPOT_SOURCE_WHITELIST_SET = {
-    'agoda.com',
-    'dreamstime.com',
-    'expedia.com',
-    'istockphoto.com',
-    'kiwicollection.comtrip.com',
-    'kkday.com',
-    'klook.com',
-    'tripadvisor.com'
+    'agoda',
+    'dreamstime',
+    'expedia',
+    'istockphoto',
+    'kiwicollection',
+    'kkday',
+    'klook',
+    'tripadvisor'
 }
 
 _SPOT_SOURCE_BLACKLIST_SET = {
-    'skyscrapercity.com'
+    'skyscrapercity'
 }
 
 
@@ -50,41 +50,50 @@ def _glen_match_to_spot_image(serpapi_match: str) -> spot_models.SpotImage:
 
 def search_spot_image_by_pic_url(api_key: str, pic_url: str) -> list[spot_models.SpotImage]:
 
-    # # serpapi request
-    # params = {
-    #     "engine":   "google_lens",
-    #     "url":      pic_url,
-    #     "api_key":  api_key,
-    #     "hl":       "en",
-    #     "output":   "JSON",
-    #     "no_cache": "true"
-    # }
-
-    # serpapi_search = GoogleSearch(params)
-    # serpapi_search_results = serpapi_search.get_dict()
-    # glen_visual_matches = serpapi_search_results["visual_matches"]
-
-    # by kayac crawler
-    glen_req_url = "https://visual-search-api-service.fly.dev/search/google-lens"
-    glen_req_params = {
-        "url": pic_url
+    # serpapi request
+    params = {
+        "engine":   "google_lens",
+        "url":      pic_url,
+        "api_key":  api_key,
+        "hl":       "en",
+        "output":   "JSON",
+        "no_cache": "true"
     }
 
-    # matches
-    resp = requests.get(
-        glen_req_url,
-        params=glen_req_params,
-        timeout=_GLEN_TIMEOUT
-    )
-    glen_visual_matches = resp.json().get('visual_matches')
+    serpapi_search = GoogleSearch(params)
+    serpapi_search_results = serpapi_search.get_dict()
+    glen_visual_matches = serpapi_search_results["visual_matches"]
+
+    logging.info("matching spots using serpapi...")
+
+    # # by kayac crawler
+    # glen_req_url = "https://visual-search-api-service.fly.dev/search/google-lens"
+    # glen_req_params = {
+    #     "url": pic_url
+    # }
+
+    # # matches
+    # resp = requests.get(
+    #     glen_req_url,
+    #     params=glen_req_params,
+    #     timeout=_GLEN_TIMEOUT
+    # )
+    # glen_visual_matches = resp.json().get('visual_matches')
 
     # filter match
     prioritized_matches = []
     other_matches = []
     for v_match in glen_visual_matches:
-        if v_match['source'] in _SPOT_SOURCE_WHITELIST_SET:
-            prioritized_matches.append(v_match)
-        else:
+
+        pass_bool = False
+        for v_src in _SPOT_SOURCE_WHITELIST_SET:
+            if v_src in v_match['source'].lower():
+                prioritized_matches.append(v_match)
+                pass_bool = True
+                print(v_match)
+                break
+
+        if not pass_bool:
             other_matches.append(v_match)
 
     filtered_matches = prioritized_matches
