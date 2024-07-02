@@ -4,6 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+setuptools = "*"
+wheel = "*"
 boto3 = "*"
 fastapi = "*"
 google-search-results = "*"
@@ -22,4 +24,4 @@ jupyterlab = "*"
 pylint = "*"
 
 [requires]
-python_version = "3.11"
+python_version = "3.12"
