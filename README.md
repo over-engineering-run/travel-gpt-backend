@@ -70,7 +70,11 @@ This is the backend API server for [o~dyssey AI].
   ```
 - Test the API server:
   ```bash
+  # test local server with curl
   curl -XGET 'http://APP_HOST:APP_PORT/healthz' -H 'Authorization: Basic APP_AUTH_TOKEN'
+
+  # response
+  {"message":"endpoint: /healthz, message: running"}
   ```
 
 
